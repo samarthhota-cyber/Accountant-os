@@ -3,8 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accountant.exe // Fiscal Ledger System</title>
+    <title>Accountant OS // Fiscal Computing System v5.0</title>
     <style>
+        :root {
+            --bg-color: #f4efe6; /* Default Ledger Parchment Tint */
+            --body-bg-extra: radial-gradient(circle, #fbf9f5 0%, #eae1d1 100%);
+            --win-header-bg: linear-gradient(90deg, #1e2d2f, #3b5056);
+            --win-header-color: #f4efe6;
+            --win-bg: #e2dacb;
+            --win-border-light: #ffffff;
+            --win-border-dark: #8c8273;
+            --accent-glow: rgba(0, 0, 0, 0.15);
+            --ledger-grid-color: #c9bfb0;
+            --font-family: "Courier New", Courier, monospace;
+            --text-color: #1e1d1a;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -13,11 +27,68 @@
         }
 
         body {
-            font-family: "Courier New", Courier, monospace;
-            background-color: #008080;
+            font-family: var(--font-family);
+            background: var(--bg-color);
+            background-image: var(--body-bg-extra);
+            background-size: cover;
+            background-position: center;
             height: 100vh;
             overflow: hidden;
-            color: #000000;
+            color: var(--text-color);
+        }
+
+        /* Scanline Overlay for Toxic Terminal Theme */
+        #scanlines {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 6px 100%;
+            z-index: 999999;
+            pointer-events: none;
+        }
+
+        /* Retro BIOS Loader Screen */
+        #bios-boot {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #0d0c0b;
+            color: #d1b48c;
+            z-index: 100000;
+            padding: 40px;
+            font-family: monospace;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        #bios-log {
+            white-space: pre-line;
+            line-height: 1.6;
+        }
+
+        .bios-btn {
+            background: #1e1d1a;
+            border: 2px solid #d1b48c;
+            color: #d1b48c;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            display: none;
+            align-self: flex-start;
+        }
+
+        .bios-btn:active {
+            background: #d1b48c;
+            color: #1e1d1a;
         }
 
         #desktop {
@@ -26,13 +97,14 @@
             position: relative;
             padding: 20px;
             display: grid;
-            grid-template-columns: repeat(auto-fill, 100px);
-            grid-auto-rows: 100px;
+            grid-template-columns: repeat(auto-fill, 95px);
+            grid-auto-rows: 95px;
             gap: 20px;
+            overflow: auto;
         }
 
         .desktop-icon {
-            width: 80px;
+            width: 85px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -43,528 +115,1420 @@
         }
 
         .icon-art {
-            width: 48px;
-            height: 48px;
-            background: #c0c0c0;
-            border: 3px double #ffffff;
-            box-shadow: 2px 2px 0px #000000;
+            width: 44px;
+            height: 44px;
+            background: var(--win-bg);
+            border: 2.5px solid;
+            border-color: var(--win-border-light) var(--win-border-dark) var(--win-border-dark) var(--win-border-light);
+            box-shadow: 2.5px 2.5px 0px rgba(0, 0, 0, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 22px;
+            transition: transform 0.05s;
         }
 
         .desktop-icon:active .icon-art {
-            box-shadow: inset 2px 2px 0px #000000;
+            border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark);
             transform: translate(1px, 1px);
         }
 
         .icon-label {
-            font-size: 11px;
-            color: #ffffff;
-            background-color: #000000;
-            padding: 2px 4px;
+            font-size: 10px;
+            color: var(--text-color);
+            background-color: var(--win-bg);
+            padding: 2px 5px;
             font-weight: bold;
+            border: 1px dashed var(--win-border-dark);
+            white-space: nowrap;
         }
 
-        /* Windows */
+        /* Windows Frame Rules */
         .window {
             position: absolute;
-            background-color: #c0c0c0; 
+            background-color: var(--win-bg); 
             border: 3px solid;
-            border-color: #ffffff #808080 #808080 #ffffff;
-            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+            border-color: var(--win-border-light) var(--win-border-dark) var(--win-border-dark) var(--win-border-light);
+            box-shadow: 3px 3px 14px var(--accent-glow);
             display: none;
             flex-direction: column;
             z-index: 10;
+            resize: both;
+            min-width: 280px;
+            min-height: 180px;
+            overflow: hidden;
+        }
+
+        .window.maximized {
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: calc(100vh - 40px) !important;
+            resize: none !important;
         }
 
         .window-header {
-            background: linear-gradient(90deg, #000080, #1084d0);
-            color: #ffffff;
-            padding: 6px 10px;
+            background: var(--win-header-bg);
+            color: var(--win-header-color);
+            padding: 5px 8px;
             cursor: move;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-weight: bold;
-            font-size: 13px;
+            font-size: 12px;
         }
 
-        .window-close-btn {
-            background: #c0c0c0;
-            border: 2px solid;
-            border-color: #ffffff #808080 #808080 #ffffff;
-            font-size: 10px;
-            font-family: inherit;
+        .window-header.inactive {
+            background: #808080;
+            color: #d0d0d0;
+        }
+
+        .title-controls {
+            display: flex;
+            gap: 2px;
+        }
+
+        .window-control-btn {
+            background: #e2dacb;
+            border: 1.5px solid;
+            border-color: #ffffff #8c8273 #8c8273 #ffffff;
+            font-size: 9px;
+            color: #000000;
+            font-family: monospace;
             font-weight: bold;
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
+        .window-control-btn:active {
+            border-color: #8c8273 #ffffff #ffffff #8c8273;
+            padding-top: 1px;
+            padding-left: 1px;
+        }
+
         .window-body {
-            padding: 12px;
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-        }
-
-        /* Terminal Window */
-        .terminal-body {
-            background-color: #000000;
-            color: #ffffff;
-            font-family: "Courier New", monospace;
-            width: 460px;
-            height: 280px;
             padding: 10px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .terminal-output {
+            font-size: 12px;
             flex-grow: 1;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            margin-bottom: 5px;
-            user-select: text;
+            overflow: auto;
+            background: var(--win-bg);
+            color: var(--text-color);
         }
 
-        .terminal-input-row {
-            display: flex;
-            align-items: center;
-        }
-
-        .terminal-prompt {
-            color: #00ff00;
-            margin-right: 5px;
-        }
-
-        .terminal-input {
-            background: transparent;
-            border: none;
-            color: #ffffff;
-            font-family: inherit;
-            font-size: inherit;
-            outline: none;
-            flex-grow: 1;
-            user-select: text;
-        }
-
-        /* Tab Layouts */
-        .tab-bar {
-            display: flex;
-            margin-bottom: 10px;
-            border-bottom: 2px solid #808080;
-        }
-
-        .tab-btn {
-            background: #d0d0d0;
+        /* Recessed Inputs and Fields */
+        .recessed-container {
             border: 2px solid;
-            border-color: #ffffff #808080 transparent #ffffff;
-            padding: 4px 10px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: bold;
-            margin-right: 2px;
-        }
-
-        .tab-btn.active {
-            background: #c0c0c0;
-            border-bottom: 2px solid #c0c0c0;
-            margin-bottom: -2px;
-            z-index: 11;
-        }
-
-        /* Notepad */
-        .notepad-textarea {
-            width: 340px;
-            height: 200px;
-            font-family: "Courier New", monospace;
-            font-size: 13px;
-            border: 2px solid;
-            border-color: #808080 #ffffff #ffffff #808080;
+            border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark);
             background: #ffffff;
-            padding: 5px;
+            color: #1e1d1a;
+            padding: 4px;
+        }
+
+        .notepad-textarea {
+            width: 100%;
+            height: calc(100% - 40px);
+            min-height: 140px;
+            font-family: var(--font-family);
+            font-size: 12px;
+            border: 2px solid;
+            border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark);
+            background: #faf7f2;
+            padding: 6px;
             resize: none;
             outline: none;
+            color: #1e1d1a;
             user-select: text;
         }
 
-        /* Audit Grid */
-        .sheet-table {
+        /* Dynamic Grid System (`SHEETS.EXE`) */
+        .sheet-formula-bar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #eae3d5;
+            padding: 3px;
+            margin-bottom: 6px;
+            border: 1.5px solid var(--win-border-dark);
+        }
+
+        .sheet-formula-bar span {
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .formula-input {
+            flex-grow: 1;
+            font-family: var(--font-family);
+            font-size: 11px;
+            border: 1px solid var(--win-border-dark);
+            padding: 1px 4px;
+            background: #ffffff;
+            outline: none;
+            user-select: text;
+        }
+
+        .grid-table {
+            width: 100%;
             border-collapse: collapse;
             background: #ffffff;
         }
 
-        .sheet-table th, .sheet-table td {
-            border: 1px solid #808080;
-            font-size: 12px;
-            padding: 2px;
-        }
-
-        .sheet-table th {
-            background: #e0e0e0;
+        .grid-table th {
+            background: #eae3d5;
+            font-size: 10px;
+            border: 1px solid var(--win-border-dark);
+            text-align: center;
             font-weight: bold;
-            padding: 6px;
+            color: #000;
         }
 
-        .sheet-input {
-            width: 110px;
+        .grid-table td {
+            border: 1px solid var(--ledger-grid-color);
+            position: relative;
+        }
+
+        .grid-cell-input {
+            width: 100%;
+            height: 100%;
             border: none;
             outline: none;
-            font-family: monospace;
-            font-size: 12px;
-            padding: 4px;
+            font-family: var(--font-family);
+            font-size: 11px;
+            padding: 3px 4px;
             text-align: right;
             user-select: text;
+            background: transparent;
         }
 
-        .sheet-sum-row {
-            background: #e0e0e0;
+        .grid-cell-input:focus {
+            background: #e2f0fd;
+        }
+
+        .grid-row-header {
+            background: #eae3d5;
+            font-size: 10px;
             font-weight: bold;
-            text-align: right;
-            padding: 6px;
-        }
-
-        /* Calc & Forms */
-        .calc-screen {
-            width: 100%;
-            height: 35px;
-            background: #ffffff;
-            border: 2px solid;
-            border-color: #808080 #ffffff #ffffff #808080;
+            text-align: center;
+            width: 25px;
+            border: 1px solid var(--win-border-dark);
             color: #000;
-            text-align: right;
-            padding: 5px;
-            font-size: 16px;
-            font-family: monospace;
-            margin-bottom: 10px;
         }
 
-        .calc-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
+        /* Database Explorer */
+        .db-layout {
+            display: flex;
+            height: 100%;
+            min-height: 220px;
+            gap: 8px;
+        }
+
+        .db-sidebar {
+            width: 110px;
+            border-right: 2px dashed var(--win-border-dark);
+            padding-right: 8px;
+            display: flex;
+            flex-direction: column;
             gap: 6px;
         }
 
-        .form-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            gap: 10px;
+        .db-sidebar-btn {
+            text-align: left;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 4px;
+            border: 1px solid transparent;
+            cursor: pointer;
         }
 
-        .form-input {
-            width: 100px;
-            padding: 3px;
-            font-family: monospace;
+        .db-sidebar-btn.active {
+            background: #ffffff;
+            border-color: var(--win-border-dark);
+        }
+
+        .db-list-container {
+            flex-grow: 1;
+            background: #ffffff;
             border: 2px solid;
-            border-color: #808080 #ffffff #ffffff #808080;
-            outline: none;
-            text-align: right;
-            user-select: text;
-        }
-
-        /* Asset Monitor */
-        .stock-dashboard {
-            width: 360px;
-            font-family: monospace;
-        }
-
-        .stonk-ticker-box {
-            background: #000000;
-            color: #33ff33;
-            padding: 8px;
-            border: 2px solid;
-            border-color: #808080 #ffffff #ffffff #808080;
-            height: 90px;
+            border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark);
             overflow-y: auto;
-            margin-bottom: 10px;
+            max-height: 260px;
+        }
+
+        .db-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-family);
             font-size: 11px;
+        }
+
+        .db-table th {
+            background: #eae3d5;
+            padding: 4px;
+            border-bottom: 2px solid var(--win-border-dark);
+            text-align: left;
+            font-weight: bold;
+            font-size: 10px;
+            color: #000;
+        }
+
+        .db-table td {
+            padding: 4px;
+            border-bottom: 1px solid var(--ledger-grid-color);
+            color: #1e1d1a;
+        }
+
+        .db-table tr:hover td {
+            background: #f7f3eb;
+            cursor: pointer;
+        }
+
+        /* Asset Valuation Screen Accessories */
+        .stonk-ticker-box {
+            background: #111111;
+            color: #e6c280;
+            padding: 6px;
+            border: 2px solid;
+            border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark);
+            height: 60px;
+            overflow-y: auto;
+            margin-bottom: 8px;
+            font-size: 10px;
         }
 
         .stock-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #d0d0d0;
-            padding: 8px;
-            margin-bottom: 6px;
-            border: 1px solid #808080;
+            background: #fdfbf7;
+            padding: 6px;
+            margin-bottom: 4px;
+            border: 1px solid var(--win-border-dark);
         }
 
-        .retro-btn {
-            background: #c0c0c0;
+        /* Terminal Window */
+        .terminal-container {
+            background: #0d0c0b;
+            color: #d1b48c;
+            font-family: var(--font-family);
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            min-height: 200px;
+        }
+
+        .terminal-log {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 4px;
+            font-size: 11px;
+            white-space: pre-wrap;
+            user-select: text;
+        }
+
+        .terminal-input-line {
+            display: flex;
+            align-items: center;
+            font-size: 11px;
+        }
+
+        .terminal-input-box {
+            background: transparent;
+            border: none;
+            color: #d1b48c;
+            font-family: inherit;
+            font-size: 11px;
+            outline: none;
+            flex-grow: 1;
+            margin-left: 4px;
+            user-select: text;
+        }
+
+        /* Synth Equalizer */
+        .synth-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .synth-vis-container {
+            height: 40px;
             border: 2px solid;
-            border-color: #ffffff #808080 #808080 #ffffff;
+            border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark);
+            background: #000;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            padding: 2px;
+        }
+
+        .vis-bar {
+            width: 10%;
+            height: 10%;
+            background: #d1b48c;
+            transition: height 0.05s ease;
+        }
+
+        /* Config Styling */
+        .theme-swatch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            padding: 5px;
+            border: 1.5px solid transparent;
+            background: #ffffff;
+        }
+
+        .theme-swatch:hover {
+            border-color: var(--win-border-dark);
+            background: rgba(0,0,0,0.03);
+        }
+
+        .swatch-color {
+            width: 24px;
+            height: 16px;
+            border: 1px solid #000;
+        }
+
+        /* System Buttons styling */
+        .retro-btn {
+            background: var(--win-bg);
+            border: 2px solid;
+            border-color: var(--win-border-light) var(--win-border-dark) var(--win-border-dark) var(--win-border-light);
             font-family: inherit;
             font-size: 11px;
             font-weight: bold;
             padding: 4px 8px;
             cursor: pointer;
+            outline: none;
+            color: var(--text-color);
         }
 
         .retro-btn:active {
-            border-color: #808080 #ffffff #ffffff #808080;
+            border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark);
+            padding-top: 5px;
+            padding-left: 9px;
         }
 
+        /* Taskbar UI */
         #taskbar {
             width: 100vw;
             height: 40px;
-            background: #c0c0c0;
-            border-top: 3px solid #ffffff;
+            background: var(--win-bg);
+            border-top: 3px solid var(--win-border-light);
             position: absolute;
             bottom: 0;
             left: 0;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 10px;
-            z-index: 9999;
+            padding: 0 6px;
+            z-index: 99999;
+        }
+
+        #taskbar-tabs {
+            display: flex;
+            gap: 4px;
+            flex-grow: 1;
+            margin: 0 10px;
+            overflow: hidden;
+            height: 30px;
+            align-items: center;
+        }
+
+        .taskbar-tab {
+            font-size: 10px;
+            padding: 2px 6px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            max-width: 120px;
+            height: 24px;
+        }
+
+        .taskbar-tab.active {
+            border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark);
+            background: #ffffff;
+        }
+
+        /* Start Menu Panel */
+        #start-menu {
+            display: none;
+            position: absolute;
+            left: 5px;
+            bottom: 42px;
+            width: 210px;
+            background-color: var(--win-bg);
+            border: 3px solid;
+            border-color: var(--win-border-light) var(--win-border-dark) var(--win-border-dark) var(--win-border-light);
+            z-index: 100000;
+            flex-direction: row;
+        }
+
+        .start-sidebar {
+            background: linear-gradient(180deg, #1e2d2f 0%, #3b5056 100%);
+            width: 32px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 8px;
+        }
+
+        .start-sidebar-text {
+            color: #ffffff;
+            font-weight: bold;
+            font-family: Arial, sans-serif;
+            transform: rotate(270deg);
+            transform-origin: center center;
+            white-space: nowrap;
+            margin-bottom: 50px;
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+
+        .start-menu-items {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 2px;
+        }
+
+        .start-item {
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+        }
+
+        .start-item:hover {
+            background-color: var(--win-header-bg);
+            color: #ffffff;
+        }
+
+        .start-divider {
+            border: none;
+            border-top: 1px solid var(--win-border-dark);
+            border-bottom: 1px solid var(--win-border-light);
+            margin: 4px 0;
         }
     </style>
 </head>
 <body>
 
+    <!-- CRT Visual Scanline Overlay -->
+    <div id="scanlines"></div>
+
+    <!-- RETRO BIOS welcome loader screen -->
+    <div id="bios-boot">
+        <div id="bios-log">Initializing Accountant OS Core Kernel Engine...</div>
+        <button class="bios-btn" id="bios-boot-btn" onclick="bootSystem()">[ LOAD ACCOUNTANT_OS.EXE ]</button>
+    </div>
+
+    <!-- DESKTOP CONTAINER -->
     <div id="desktop">
-        <div class="desktop-icon" onclick="openWindow('win-ledger')">
-            <div class="icon-art">📔</div>
-            <div class="icon-label">LEDGER.EXE</div>
+        <div class="desktop-icon" onclick="openWindow('win-db')">
+            <div class="icon-art">🗄️</div>
+            <div class="icon-label">database</div>
         </div>
 
-        <div class="desktop-icon" onclick="openWindow('win-audit')">
-            <div class="icon-art">🧾</div>
-            <div class="icon-label">AUDIT.EXE</div>
+        <div class="desktop-icon" onclick="openWindow('win-docs')">
+            <div class="icon-art">📔</div>
+            <div class="icon-label">docs.exe</div>
+        </div>
+
+        <div class="desktop-icon" onclick="openWindow('win-sheets')">
+            <div class="icon-art">📊</div>
+            <div class="icon-label">sheets.exe</div>
         </div>
 
         <div class="desktop-icon" onclick="openWindow('win-calc')">
             <div class="icon-art">🖩</div>
-            <div class="icon-label">ROI_CALC.EXE</div>
+            <div class="icon-label">calc</div>
         </div>
 
         <div class="desktop-icon" onclick="openWindow('win-assets')">
             <div class="icon-art">🏛️</div>
-            <div class="icon-label">ASSET_VAL.EXE</div>
+            <div class="icon-label">assets</div>
         </div>
 
-        <!-- TERMINAL WINDOW -->
-        <div id="win-terminal" class="window" style="left: 120px; top: 80px;">
+        <div class="desktop-icon" onclick="openWindow('win-terminal')">
+            <div class="icon-art">📟</div>
+            <div class="icon-label">terminal</div>
+        </div>
+
+        <div class="desktop-icon" onclick="openWindow('win-theme')">
+            <div class="icon-art">⚙️</div>
+            <div class="icon-label">settings</div>
+        </div>
+
+        <div class="desktop-icon" onclick="openWindow('win-synth')">
+            <div class="icon-art">🎵</div>
+            <div class="icon-label">synth</div>
+        </div>
+
+        <!-- FILE DATABASE MANAGER (`DATABASE.EXE`) -->
+        <div id="win-db" class="window" style="z-index: 101;">
             <div class="window-header">
-                <span>TERMINAL.EXE - Command Prompt</span>
-                <button class="window-close-btn" onclick="closeWindow('win-terminal')">X</button>
+                <span>Database.exe - Central Directory</span>
+                <div class="title-controls">
+                    <button class="window-control-btn" onclick="minimizeWindow('win-db')">-</button>
+                    <button class="window-control-btn" onclick="toggleMaximize('win-db')">□</button>
+                    <button class="window-control-btn" onclick="closeWindow('win-db')">X</button>
+                </div>
             </div>
-            <div class="window-body terminal-body" onclick="document.getElementById('term-field').focus()">
-                <div class="terminal-output" id="term-out">Accountant.exe OS Platform [Version 2026.4.18]
-Type "help" to display available internal operations.
-</div>
-                <div class="terminal-input-row">
-                    <span class="terminal-prompt">C:\ACCOUNTING&gt;</span>
-                    <input type="text" class="terminal-input" id="term-field" onkeydown="handleTerminal(event)" autocomplete="off">
+            <div class="window-body">
+                <div class="db-layout">
+                    <div class="db-sidebar">
+                        <div class="db-sidebar-btn active" onclick="filterDatabase('all', this)">📂 All Nodes</div>
+                        <div class="db-sidebar-btn" onclick="filterDatabase('txt', this)">📄 Documents</div>
+                        <div class="db-sidebar-btn" onclick="filterDatabase('sheet', this)">📊 Sheets</div>
+                        <button class="retro-btn" style="margin-top: auto; font-size: 9px;" onclick="promptNewFile()">+ New Node</button>
+                    </div>
+                    <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 8px;">
+                        <div class="db-list-container">
+                            <table class="db-table" id="db-file-table">
+                                <thead>
+                                    <tr>
+                                        <th>File Name</th>
+                                        <th>Format</th>
+                                        <th>Bytes</th>
+                                        <th>Updated</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="db-tbody">
+                                    <!-- Dynamic elements fetched from DB -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                            <button class="retro-btn" onclick="openSelectedDbFile()">Launch Selected File</button>
+                            <button class="retro-btn" onclick="deleteSelectedDbFile()">Purge Entry</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- NOTEPAD -->
-        <div id="win-ledger" class="window" style="left: 40px; top: 40px;">
+        <!-- JOURNAL / TEXT EDITOR (`DOCS.EXE`) -->
+        <div id="win-docs" class="window">
             <div class="window-header">
-                <span>Corporate Journal - Audit_Notes.txt</span>
-                <button class="window-close-btn" onclick="closeWindow('win-ledger')">X</button>
+                <span id="docs-title">Docs.exe - text_editor</span>
+                <div class="title-controls">
+                    <button class="window-control-btn" onclick="minimizeWindow('win-docs')">-</button>
+                    <button class="window-control-btn" onclick="toggleMaximize('win-docs')">□</button>
+                    <button class="window-control-btn" onclick="closeWindow('win-docs')">X</button>
+                </div>
             </div>
             <div class="window-body">
-                <textarea class="notepad-textarea" id="notepad-input" placeholder="Enter general journal balances..."></textarea>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="font-size: 10px; font-weight: bold;" id="docs-filename-label">Buffer: Unsaved Draft</span>
+                    <button class="retro-btn" style="font-size: 9px; padding: 2px 4px;" onclick="saveDocsToDatabase()">Commit to DB</button>
+                </div>
+                <textarea class="notepad-textarea" id="notepad-input" placeholder="Type here. Pressing keys triggers mechanical bleep tones..." onkeydown="playTypewriterKeyClick()"></textarea>
                 <div style="margin-top: 8px;">
-                    <button class="retro-btn" onclick="saveTextFile()">Export Ledger Notes</button>
+                    <button class="retro-btn" onclick="saveTextFile()">Export to Disk (.TXT)</button>
                 </div>
             </div>
         </div>
 
-        <!-- SPREADSHEET -->
-        <div id="win-audit" class="window" style="left: 420px; top: 30px;">
+        <!-- DYNAMIC FORMULA SPREADSHEET (`SHEETS.EXE`) -->
+        <div id="win-sheets" class="window">
             <div class="window-header">
-                <span>Tax Balancing Matrix - FY2026.csv</span>
-                <button class="window-close-btn" onclick="closeWindow('win-audit')">X</button>
+                <span id="sheets-title">Sheets.exe - calculation_matrix</span>
+                <div class="title-controls">
+                    <button class="window-control-btn" onclick="minimizeWindow('win-sheets')">-</button>
+                    <button class="window-control-btn" onclick="toggleMaximize('win-sheets')">□</button>
+                    <button class="window-control-btn" onclick="closeWindow('win-sheets')">X</button>
+                </div>
             </div>
             <div class="window-body">
-                <table class="sheet-table">
-                    <thead>
-                        <tr>
-                            <th>Fiscal Metric</th>
-                            <th>Value ($)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Gross Revenues</td>
-                            <td><input type="number" class="sheet-input" id="val-rev" value="50000" oninput="calculateSheet()"></td>
-                        </tr>
-                        <tr>
-                            <td>Cost of Goods (COGS)</td>
-                            <td><input type="number" class="sheet-input" id="val-cogs" value="15000" oninput="calculateSheet()"></td>
-                        </tr>
-                        <tr class="sheet-sum-row">
-                            <td>Gross Margin</td>
-                            <td id="sum-gross">$35,000</td>
-                        </tr>
-                        <tr>
-                            <td>Standard Deductions</td>
-                            <td><input type="number" class="sheet-input" id="val-deduct" value="5000" oninput="calculateSheet()"></td>
-                        </tr>
-                        <tr class="sheet-sum-row" style="color: #aa0000;">
-                            <td>Est. Corporate Tax (21%)</td>
-                            <td id="sum-tax">$6,300</td>
-                        </tr>
-                        <tr class="sheet-sum-row" style="background: #008000; color: #fff;">
-                            <td>Net Operating Income</td>
-                            <td id="sum-net">$23,700</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span style="font-size: 10px; font-weight: bold;" id="sheets-filename-label">Buffer: Active Spreadsheet</span>
+                    <button class="retro-btn" style="font-size: 9px; padding: 2px 4px;" onclick="saveSheetsToDatabase()">Commit to DB</button>
+                </div>
+                <div class="sheet-formula-bar">
+                    <span>CELL:</span>
+                    <input type="text" id="formula-bar-cell" readonly value="--" style="width: 25px; border: 1px solid var(--win-border-dark); text-align: center; font-size: 10px; font-weight: bold;">
+                    <span>FORMULA:</span>
+                    <input type="text" id="formula-bar-input" class="formula-input" onkeydown="handleFormulaEnter(event); playTypewriterKeyClick();">
+                </div>
+                <div style="overflow-x: auto; background: #ffffff; border: 2px solid var(--win-border-dark);">
+                    <table class="grid-table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>A</th>
+                                <th>B</th>
+                                <th>C</th>
+                                <th>D</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Generate A-D, 1-6 cells dynamically -->
+                            <script>
+                                for(let row=1; row<=6; row++) {
+                                    document.write('<tr>');
+                                    document.write('<td class="grid-row-header">' + row + '</td>');
+                                    ['A','B','C','D'].forEach(col => {
+                                        let cellId = col + row;
+                                        document.write('<td>');
+                                        document.write('<input type="text" id="cell-' + cellId + '" class="grid-cell-input" ' +
+                                            'onfocus="onCellFocus(\'' + cellId + '\')" ' +
+                                            'onblur="onCellBlur(\'' + cellId + '\')" ' +
+                                            'onkeydown="playTypewriterKeyClick()" ' +
+                                            'onchange="onCellChange(\'' + cellId + '\')">');
+                                        document.write('</td>');
+                                    });
+                                    document.write('</tr>');
+                                }
+                            </script>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 6px; display: flex; justify-content: space-between; font-size: 9px; color: #555;">
+                    <span>Use "=" to evaluate cells. Ex: "=A1+B1"</span>
+                    <button class="retro-btn" style="font-size: 8px;" onclick="exportToCSV()">Save CSV</button>
+                </div>
             </div>
         </div>
 
-        <!-- CALCULATOR WITH NEW TAB FORM -->
-        <div id="win-calc" class="window" style="left: 60px; top: 340px;">
+        <!-- CALCULATOR -->
+        <div id="win-calc" class="window">
             <div class="window-header">
-                <span>ROI_Calc.exe</span>
-                <button class="window-close-btn" onclick="closeWindow('win-calc')">X</button>
+                <span>calc.exe</span>
+                <div class="title-controls">
+                    <button class="window-control-btn" onclick="minimizeWindow('win-calc')">-</button>
+                    <button class="window-control-btn" onclick="toggleMaximize('win-calc')">□</button>
+                    <button class="window-control-btn" onclick="closeWindow('win-calc')">X</button>
+                </div>
             </div>
-            <div class="window-body" style="width: 260px;">
-                <div class="tab-bar">
-                    <button class="tab-btn active" id="tab-btn-standard" onclick="switchCalcTab('standard')">Standard</button>
-                    <button class="tab-btn" id="tab-btn-form" onclick="switchCalcTab('form')">ROI Matrix Form</button>
-                </div>
-
-                <!-- Standard Calc View -->
-                <div id="calc-view-standard">
-                    <input type="text" class="calc-screen" id="calc-display" readonly value="0">
-                    <div class="calc-grid">
-                        <button class="retro-btn" onclick="clearCalc()">C</button>
-                        <button class="retro-btn" onclick="pressCalc('/')">/</button>
-                        <button class="retro-btn" onclick="pressCalc('*')">*</button>
-                        <button class="retro-btn" onclick="pressCalc('-')">-</button>
-                        <button class="retro-btn" onclick="pressCalc('7')">7</button>
-                        <button class="retro-btn" onclick="pressCalc('8')">8</button>
-                        <button class="retro-btn" onclick="pressCalc('9')">9</button>
-                        <button class="retro-btn" onclick="pressCalc('+')">+</button>
-                        <button class="retro-btn" onclick="pressCalc('4')">4</button>
-                        <button class="retro-btn" onclick="pressCalc('5')">5</button>
-                        <button class="retro-btn" onclick="pressCalc('6')">6</button>
-                        <button class="retro-btn" onclick="calculateResult()">=</button>
-                        <button class="retro-btn" onclick="pressCalc('1')">1</button>
-                        <button class="retro-btn" onclick="pressCalc('2')">2</button>
-                        <button class="retro-btn" onclick="pressCalc('3')">3</button>
-                        <button class="retro-btn" onclick="pressCalc('0')">0</button>
-                    </div>
-                </div>
-
-                <!-- Form Metric View -->
-                <div id="calc-view-form" style="display: none;">
-                    <div class="form-row">
-                        <label>Principal ($):</label>
-                        <input type="number" class="form-input" id="roi-principal" value="10000" oninput="runRoiForm()">
-                    </div>
-                    <div class="form-row">
-                        <label>Rate (%):</label>
-                        <input type="number" class="form-input" id="roi-rate" value="5" oninput="runRoiForm()">
-                    </div>
-                    <div class="form-row">
-                        <label>Terms (Yrs):</label>
-                        <input type="number" class="form-input" id="roi-term" value="3" oninput="runRoiForm()">
-                    </div>
-                    <hr style="margin: 8px 0; border: 1px inset #fff;">
-                    <div class="form-row" style="font-weight: bold; color: #008000;">
-                        <label>Simple Return:</label>
-                        <span id="roi-out-simple">$11,500</span>
-                    </div>
-                    <div class="form-row" style="font-weight: bold; color: #000080;">
-                        <label>Compound Cap:</label>
-                        <span id="roi-out-compound">$11,576</span>
-                    </div>
+            <div class="window-body" style="max-width: 230px;">
+                <input type="text" class="calc-screen" id="calc-display" readonly value="0">
+                <div class="calc-grid">
+                    <button class="retro-btn" onclick="clearCalc()">C</button>
+                    <button class="retro-btn" onclick="pressCalc('/')">/</button>
+                    <button class="retro-btn" onclick="pressCalc('*')">*</button>
+                    <button class="retro-btn" onclick="pressCalc('-')">-</button>
+                    <button class="retro-btn" onclick="pressCalc('7')">7</button>
+                    <button class="retro-btn" onclick="pressCalc('8')">8</button>
+                    <button class="retro-btn" onclick="pressCalc('9')">9</button>
+                    <button class="retro-btn" onclick="pressCalc('+')">+</button>
+                    <button class="retro-btn" onclick="pressCalc('4')">4</button>
+                    <button class="retro-btn" onclick="pressCalc('5')">5</button>
+                    <button class="retro-btn" onclick="pressCalc('6')">6</button>
+                    <button class="retro-btn" onclick="calculateResult()">=</button>
+                    <button class="retro-btn" onclick="pressCalc('1')">1</button>
+                    <button class="retro-btn" onclick="pressCalc('2')">2</button>
+                    <button class="retro-btn" onclick="pressCalc('3')">3</button>
+                    <button class="retro-btn" onclick="pressCalc('0')">0</button>
                 </div>
             </div>
         </div>
 
         <!-- ASSET MONITOR -->
-        <div id="win-assets" class="window" style="left: 450px; top: 290px;">
+        <div id="win-assets" class="window">
             <div class="window-header">
-                <span>Asset Valuation Terminal</span>
-                <button class="window-close-btn" onclick="closeWindow('win-assets')">X</button>
+                <span>assets.exe - Asset Monitor</span>
+                <div class="title-controls">
+                    <button class="window-control-btn" onclick="minimizeWindow('win-assets')">-</button>
+                    <button class="window-control-btn" onclick="toggleMaximize('win-assets')">□</button>
+                    <button class="window-control-btn" onclick="closeWindow('win-assets')">X</button>
+                </div>
             </div>
             <div class="window-body">
                 <div class="stock-dashboard">
-                    <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px;">
-                        <span id="player-cash">LIQUID CAPITAL: $5000</span>
-                        <span id="player-networth">TOTAL EQUITY: $5000</span>
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px; font-size: 11px;">
+                        <span id="player-cash">LIQUID: $5000</span>
+                        <span id="player-networth">NET: $5000</span>
                     </div>
                     
                     <div class="stonk-ticker-box" id="ticker-log">
-                        [AUDIT ENGINE ACTIVE] Processing Macro Fiscal Amortization Schedule.<br>
-                        Asset values recalculate over variable intervals.
+                        [AUDIT ENGINE ACTIVE] Processing system assets.<br>
+                        Values auto-amortize continuously.
+                    </div>
+
+                    <!-- Sparkline Charts Canvas -->
+                    <div style="margin-bottom: 8px;">
+                        <canvas id="asset-canvas" width="280" height="60" style="background: #0d0c0b; border: 1.5px solid var(--win-border-dark); width: 100%; height: 60px;"></canvas>
+                        <div style="display: flex; justify-content: space-between; font-size: 8px; font-weight: bold; padding: 2px;">
+                            <span style="color: #00ff00;">● MACHINERY</span>
+                            <span style="color: #ffff00;">● T-BILLS</span>
+                        </div>
                     </div>
 
                     <div class="stock-row">
                         <div>
-                            <strong>MACH (Machinery Portfolio)</strong><br>
-                            Book Val: $<span id="price-mach">800</span> | Blocks: <span id="owned-mach">0</span>
+                            <strong>MACH (Machinery)</strong><br>
+                            Val: $<span id="price-mach">800</span> | Owned: <span id="owned-mach">0</span>
                         </div>
                         <div style="display: flex; gap: 4px;">
-                            <button class="retro-btn" onclick="buyAsset('mach')">ACQUIRE</button>
-                            <button class="retro-btn" onclick="sellAsset('mach')">LIQUIDATE</button>
+                            <button class="retro-btn" style="padding: 2px 4px;" onclick="buyAsset('mach')">BUY</button>
+                            <button class="retro-btn" style="padding: 2px 4px;" onclick="sellAsset('mach')">SELL</button>
                         </div>
                     </div>
 
                     <div class="stock-row">
                         <div>
-                            <strong>TBILL (Treasury Bills)</strong><br>
-                            Par Val: $<span id="price-tbill">250</span> | Contracts: <span id="owned-tbill">0</span>
+                            <strong>TBILL (T-Bills)</strong><br>
+                            Val: $<span id="price-tbill">250</span> | Owned: <span id="owned-tbill">0</span>
                         </div>
                         <div style="display: flex; gap: 4px;">
-                            <button class="retro-btn" onclick="buyAsset('tbill')">ACQUIRE</button>
-                            <button class="retro-btn" onclick="sellAsset('tbill')">LIQUIDATE</button>
+                            <button class="retro-btn" style="padding: 2px 4px;" onclick="buyAsset('tbill')">BUY</button>
+                            <button class="retro-btn" style="padding: 2px 4px;" onclick="sellAsset('tbill')">SELL</button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- TERMINAL INTERPRETER -->
+        <div id="win-terminal" class="window">
+            <div class="window-header">
+                <span>C:\ACCOUNTANT\system32\cmd.exe</span>
+                <div class="title-controls">
+                    <button class="window-control-btn" onclick="minimizeWindow('win-terminal')">-</button>
+                    <button class="window-control-btn" onclick="toggleMaximize('win-terminal')">□</button>
+                    <button class="window-control-btn" onclick="closeWindow('win-terminal')">X</button>
+                </div>
+            </div>
+            <div class="window-body" style="padding: 0;">
+                <div class="terminal-container" onclick="focusTerminal()">
+                    <div class="terminal-log" id="terminal-output">Accountant OS Command shell [Version 5.0.1]
+(C) Copyright Accountant Inc. All active modules verified.
+Type "help" to list console diagnostics.
+</div>
+                    <div class="terminal-input-line">
+                        <span>C:\ACCOUNTANT&gt;</span>
+                        <input type="text" class="terminal-input-box" id="terminal-input" onkeydown="handleTerminalCommand(event); playTypewriterKeyClick();">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONFIGURATION WINDOW -->
+        <div id="win-theme" class="window">
+            <div class="window-header">
+                <span>theme.exe - OS Settings</span>
+                <div class="title-controls">
+                    <button class="window-control-btn" onclick="minimizeWindow('win-theme')">-</button>
+                    <button class="window-control-btn" onclick="toggleMaximize('win-theme')">□</button>
+                    <button class="window-control-btn" onclick="closeWindow('win-theme')">X</button>
+                </div>
+            </div>
+            <div class="window-body">
+                <div style="margin-bottom: 12px;">
+                    <strong style="font-size: 11px;">Select System Shell Motif</strong>
+                    <div class="theme-swatch" onclick="applyTheme('ledger')">
+                        <div class="swatch-color" style="background: #f4efe6;"></div>
+                        <span>Vintage Ledger (Cream Book)</span>
+                    </div>
+                    <div class="theme-swatch" onclick="applyTheme('classic')">
+                        <div class="swatch-color" style="background: #008080;"></div>
+                        <span>Windows Classic Teal</span>
+                    </div>
+                    <div class="theme-swatch" onclick="applyTheme('midnight')">
+                        <div class="swatch-color" style="background: #0d0a1b;"></div>
+                        <span>Midnight Nebula</span>
+                    </div>
+                    <div class="theme-swatch" onclick="applyTheme('toxic')">
+                        <div class="swatch-color" style="background: #000000; border: 1px solid #00ff00;"></div>
+                        <span>Green Phosphor (Toxic)</span>
+                    </div>
+                </div>
+                
+                <hr style="margin: 8px 0; border: none; border-top: 1px solid var(--win-border-dark);">
+
+                <div style="margin-bottom: 8px;">
+                    <strong style="font-size: 11px;">Personalization Settings</strong>
+                    <div style="margin-top: 4px; display: flex; flex-direction: column; gap: 4px;">
+                        <label style="font-size: 10px;">
+                            Modify Taskbar Label:
+                            <input type="text" id="sys-branding-input" style="width: 100%; padding: 2px; font-family: monospace;" value="Accountant OS" oninput="changeBranding(this.value)">
+                        </label>
+                        <div style="margin-top: 6px; display: flex; gap: 4px;">
+                            <button class="retro-btn" style="font-size: 9px;" onclick="resetSystemData()">Format System Storage</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AUDIO CONTROL CENTER -->
+        <div id="win-synth" class="window">
+            <div class="window-header">
+                <span>synth.exe - Audio Generator</span>
+                <div class="title-controls">
+                    <button class="window-control-btn" onclick="minimizeWindow('win-synth')">-</button>
+                    <button class="window-control-btn" onclick="toggleMaximize('win-synth')">□</button>
+                    <button class="window-control-btn" onclick="closeWindow('win-synth')">X</button>
+                </div>
+            </div>
+            <div class="window-body">
+                <div class="synth-controls">
+                    <span style="font-size: 10px; font-weight: bold; display: block; margin-bottom: 4px;">AUDIO FREQUENCY GENERATOR</span>
+                    
+                    <div class="synth-vis-container">
+                        <div class="vis-bar" id="v-bar1"></div>
+                        <div class="vis-bar" id="v-bar2"></div>
+                        <div class="vis-bar" id="v-bar3"></div>
+                        <div class="vis-bar" id="v-bar4"></div>
+                        <div class="vis-bar" id="v-bar5"></div>
+                        <div class="vis-bar" id="v-bar6"></div>
+                        <div class="vis-bar" id="v-bar7"></div>
+                        <div class="vis-bar" id="v-bar8"></div>
+                    </div>
+
+                    <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;">
+                        <button class="retro-btn" style="flex-grow: 1;" onclick="playSynth('chime')">Boot Melody</button>
+                        <button class="retro-btn" style="flex-grow: 1;" onclick="toggleJukeboxLoop()">Jukebox Loop</button>
+                        <button class="retro-btn" style="flex-grow: 1;" onclick="stopAudioEngine()">Kill Feed</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
+    <!-- STARTUP MENU POPUP -->
+    <div id="start-menu" class="window" style="width: 200px;">
+        <div class="start-sidebar">
+            <span class="start-sidebar-text">Accountant OS</span>
+        </div>
+        <div class="start-menu-items">
+            <div class="start-item" onclick="openWindow('win-db'); closeStartMenu();">🗄️ Database Center</div>
+            <div class="start-item" onclick="openWindow('win-docs'); closeStartMenu();">📔 text_editor</div>
+            <div class="start-item" onclick="openWindow('win-sheets'); closeStartMenu();">📊 calculation_matrix</div>
+            <div class="start-item" onclick="openWindow('win-calc'); closeStartMenu();">🖩 ROI Calc</div>
+            <div class="start-item" onclick="openWindow('win-assets'); closeStartMenu();">🏛️ Asset Monitor</div>
+            <div class="start-item" onclick="openWindow('win-terminal'); closeStartMenu();">📟 Terminal</div>
+            <div class="start-item" onclick="openWindow('win-theme'); closeStartMenu();">⚙️ OS Settings</div>
+            <div class="start-item" onclick="openWindow('win-synth'); closeStartMenu();">🎵 Audio Synth</div>
+            <hr class="start-divider">
+            <div class="start-item" onclick="resetSystemData(); closeStartMenu();">♻️ Format Disk</div>
+            <div class="start-item" onclick="triggerBiosReboot(); closeStartMenu();">🔴 Restart System</div>
+        </div>
+    </div>
+
+    <!-- MAIN TASKBAR -->
     <div id="taskbar">
-        <button class="retro-btn" style="padding: 2px 12px;" onclick="openWindow('win-terminal')">⚙️ System Terminal</button>
-        <span style="font-weight: bold; font-size: 11px; padding-right: 10px;">Accountant.exe OS</span>
+        <button class="retro-btn" style="padding: 2px 10px; display: flex; align-items: center; gap: 4px;" onclick="toggleStartMenu()">
+            ⚙️ Start
+        </button>
+        
+        <div id="taskbar-tabs"></div>
+
+        <div style="display: flex; align-items: center; gap: 6px; border: 2.5px solid; border-color: var(--win-border-dark) var(--win-border-light) var(--win-border-light) var(--win-border-dark); background: var(--win-bg); padding: 2px 8px; font-weight: bold; font-size: 10px;">
+            <span id="taskbar-branding" style="margin-right: 6px;">Accountant OS</span>
+            <span id="taskbar-clock">00:00:00 AM</span>
+        </div>
     </div>
 
     <script>
-        // --- WINDOW MANAGER ---
+        // --- DATABASE SEED / DEFAULTS ---
+        const defaultFiles = [
+            { id: "1", name: "Welcome_Audit_Notes.txt", type: "txt", content: "ACCOUNTANT OS // CENTRAL DATABASE SYSTEM\n--------------------------------------------\nWelcome to your primary workspace. This is a persistent virtual directory. All files created or updated are backed up directly inside your local browser storage.\n\nUse Database Explorer to easily link between Docs and Sheets.", date: "2026-07-19" },
+            { id: "2", name: "FY26_Macro_Model.sheet", type: "sheet", content: JSON.stringify({
+                data: {
+                    "A1": "Gross Revenue", "B1": "50000",
+                    "A2": "COGS", "B2": "15000",
+                    "A3": "Standard Ded", "B3": "5000",
+                    "A4": "Gross Margin", "B4": "=B1-B2",
+                    "A5": "Corporate Tax", "B5": "=B4*0.21",
+                    "A6": "Net Yield", "B6": "=B4-B3-B5"
+                },
+                formulas: {
+                    "B4": "=B1-B2",
+                    "B5": "=B4*0.21",
+                    "B6": "=B4-B3-B5"
+                }
+            }), date: "2026-07-19" }
+        ];
+
+        let database = [];
+        let dbFilterType = "all";
+        let selectedDbFileId = null;
+
+        let activeTextFileId = null;   // Tracking active file inside win-docs
+        let activeSheetFileId = null;  // Tracking active file inside win-sheets
+
+        // Virtual Spreadsheet Data Structure
+        let sheetCells = {};
+        let sheetFormulas = {};
+        let activeCellId = null;
+
+        // --- BIOS BOOT PROTOCOLS ---
+        const biosLines = [
+            "ACCOUNTANT COMPUTER BIOS v5.0.1",
+            "Copyright (C) 1996 Accountant OS Inc. All rights reserved.",
+            "",
+            "CO-PROCESSOR STATUS: Operational",
+            "MEMORY CHIP CHECK: 131,072 KB RAM OK",
+            "",
+            "Hard Disk 0 Primary Master... [EXCELSIOR 4.3GB]",
+            "Sector layout alignment... Secure",
+            "Virtual Relational DB Directory... Verified",
+            "Dynamic Formula Array System... Mounted",
+            "STARDANCE COMPLIANCE PROTOCOL... ONLINE",
+            "",
+            "Ready to load Operating System workspace..."
+        ];
+
+        let biosLineIdx = 0;
+        function printBiosLines() {
+            const container = document.getElementById('bios-log');
+            if (biosLineIdx < biosLines.length) {
+                container.innerHTML += biosLines[biosLineIdx] + "<br>";
+                biosLineIdx++;
+                setTimeout(printBiosLines, 100);
+            } else {
+                container.innerHTML += "<br>PARTITION LOAD SUCCESSFUL. INITIATING INTERFACE.<br>";
+                document.getElementById('bios-boot-btn').style.display = 'block';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('system-booted') === 'true') {
+                document.getElementById('bios-boot').style.display = 'none';
+                initOS();
+            } else {
+                printBiosLines();
+            }
+        });
+
+        function bootSystem() {
+            playSynth('chime');
+            sessionStorage.setItem('system-booted', 'true');
+            const bios = document.getElementById('bios-boot');
+            bios.style.transition = 'opacity 0.5s';
+            bios.style.opacity = '0';
+            setTimeout(() => {
+                bios.style.display = 'none';
+                initOS();
+            }, 500);
+        }
+
+        function triggerBiosReboot() {
+            sessionStorage.removeItem('system-booted');
+            playSynth('sweep');
+            document.getElementById('bios-log').innerHTML = "Preparing virtual restart...<br>";
+            biosLineIdx = 0;
+            document.getElementById('bios-boot-btn').style.display = 'none';
+            document.getElementById('bios-boot').style.opacity = '1';
+            document.getElementById('bios-boot').style.display = 'flex';
+            setTimeout(printBiosLines, 500);
+        }
+
+
+        // --- MAIN SYSTEM INITIALIZATION ---
+        function initOS() {
+            initDatabase();
+            loadWindowStates();
+            initAssetGame();
+            initThemeAndBranding();
+            tickClock();
+            setInterval(tickClock, 1000);
+        }
+
+
+        // --- CENTRAL DATABASE ENGINE ---
+        function initDatabase() {
+            const storedDb = localStorage.getItem('accountant_database');
+            if (storedDb) {
+                database = JSON.parse(storedDb);
+            } else {
+                database = [...defaultFiles];
+                localStorage.setItem('accountant_database', JSON.stringify(database));
+            }
+            renderDatabase();
+        }
+
+        function syncDatabaseToStorage() {
+            localStorage.setItem('accountant_database', JSON.stringify(database));
+            renderDatabase();
+        }
+
+        function renderDatabase() {
+            const tbody = document.getElementById('db-tbody');
+            tbody.innerHTML = '';
+
+            const filtered = database.filter(f => {
+                if (dbFilterType === 'all') return true;
+                return f.type === dbFilterType;
+            });
+
+            filtered.forEach(file => {
+                const tr = document.createElement('tr');
+                if (file.id === selectedDbFileId) {
+                    tr.style.background = 'var(--win-header-bg)';
+                    tr.style.color = 'var(--win-header-color)';
+                }
+
+                tr.onclick = () => selectDbFile(file.id);
+                tr.ondblclick = () => {
+                    selectDbFile(file.id);
+                    openSelectedDbFile();
+                };
+
+                const byteSize = file.content ? new Blob([file.content]).size : 0;
+
+                tr.innerHTML = `
+                    <td style="font-weight: bold;">${file.type === 'txt' ? '📄' : '📊'} ${file.name}</td>
+                    <td style="text-transform: uppercase;">.${file.type}</td>
+                    <td>${byteSize} B</td>
+                    <td>${file.date}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function selectDbFile(id) {
+            selectedDbFileId = id;
+            renderDatabase();
+        }
+
+        function filterDatabase(type, btnEl) {
+            dbFilterType = type;
+            document.querySelectorAll('.db-sidebar-btn').forEach(btn => btn.classList.remove('active'));
+            btnEl.classList.add('active');
+            selectedDbFileId = null;
+            renderDatabase();
+        }
+
+        function promptNewFile() {
+            const name = prompt("Enter Node File Name:");
+            if (!name) return;
+            const format = prompt("Select Format Type ('txt' or 'sheet'):").toLowerCase();
+            if (format !== 'txt' && format !== 'sheet') {
+                alert("Format must be either 'txt' or 'sheet'.");
+                return;
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            const cleanName = name.replace(/[^a-zA-Z0-9_\-\.]/g, "_") + (name.endsWith('.' + format) ? '' : '.' + format);
+
+            let initialContent = "";
+            if (format === 'sheet') {
+                initialContent = JSON.stringify({ data: {}, formulas: {} });
+            }
+
+            const newFile = {
+                id: String(Date.now()),
+                name: cleanName,
+                type: format,
+                content: initialContent,
+                date: today
+            };
+
+            database.push(newFile);
+            syncDatabaseToStorage();
+        }
+
+        function openSelectedDbFile() {
+            if (!selectedDbFileId) {
+                alert("Select an entry from the database list first.");
+                return;
+            }
+            const file = database.find(f => f.id === selectedDbFileId);
+            if (!file) return;
+
+            if (file.type === 'txt') {
+                activeTextFileId = file.id;
+                document.getElementById('docs-filename-label').innerText = "Database: " + file.name;
+                document.getElementById('notepad-input').value = file.content;
+                openWindow('win-docs');
+            } else if (file.type === 'sheet') {
+                activeSheetFileId = file.id;
+                document.getElementById('sheets-filename-label').innerText = "Database: " + file.name;
+                
+                // Clear active grid and load
+                clearGridState();
+                try {
+                    const sheetObj = JSON.parse(file.content);
+                    sheetCells = sheetObj.data || {};
+                    sheetFormulas = sheetObj.formulas || {};
+                    populateGridUI();
+                } catch(e) {
+                    alert("Error processing spreadsheet layout.");
+                }
+                openWindow('win-sheets');
+            }
+        }
+
+        function deleteSelectedDbFile() {
+            if (!selectedDbFileId) return;
+            if (confirm("Permanently purge this document node from partition database?")) {
+                database = database.filter(f => f.id !== selectedDbFileId);
+                
+                // Check if active file is open
+                if (activeTextFileId === selectedDbFileId) {
+                    activeTextFileId = null;
+                    document.getElementById('docs-filename-label').innerText = "Buffer: Unsaved Draft";
+                    document.getElementById('notepad-input').value = "";
+                }
+                if (activeSheetFileId === selectedDbFileId) {
+                    activeSheetFileId = null;
+                    document.getElementById('sheets-filename-label').innerText = "Buffer: Active Spreadsheet";
+                    clearGridState();
+                }
+
+                selectedDbFileId = null;
+                syncDatabaseToStorage();
+            }
+        }
+
+
+        // --- SPREADSHEET FORMULA PARSER & RUNTIME ---
+        function clearGridState() {
+            sheetCells = {};
+            sheetFormulas = {};
+            activeCellId = null;
+            document.getElementById('formula-bar-cell').value = '--';
+            document.getElementById('formula-bar-input').value = '';
+            document.querySelectorAll('.grid-cell-input').forEach(input => input.value = '');
+        }
+
+        function populateGridUI() {
+            // Evaluates and fills all inputs with actual value (or formulas when focused)
+            for (let row=1; row<=6; row++) {
+                ['A','B','C','D'].forEach(col => {
+                    const cellId = col + row;
+                    const el = document.getElementById('cell-' + cellId);
+                    if (el) {
+                        const calculatedVal = getCalculatedValue(cellId);
+                        el.value = calculatedVal;
+                    }
+                });
+            }
+        }
+
+        function onCellFocus(id) {
+            activeCellId = id;
+            document.getElementById('formula-bar-cell').value = id;
+            
+            // Show formula in formula bar and input if it exists
+            const formula = sheetFormulas[id];
+            const rawVal = sheetCells[id] || '';
+            
+            document.getElementById('formula-bar-input').value = formula ? formula : rawVal;
+            
+            const cellEl = document.getElementById('cell-' + id);
+            cellEl.value = formula ? formula : rawVal;
+        }
+
+        function onCellBlur(id) {
+            // On blur, recalculate full sheet and swap raw formula back to calculated value
+            const cellEl = document.getElementById('cell-' + id);
+            onCellChange(id);
+            setTimeout(populateGridUI, 50);
+        }
+
+        function onCellChange(id) {
+            const cellEl = document.getElementById('cell-' + id);
+            const val = cellEl.value.trim();
+
+            if (val.startsWith('=')) {
+                sheetFormulas[id] = val;
+                sheetCells[id] = ''; // Will hold evaluated values
+            } else {
+                delete sheetFormulas[id];
+                sheetCells[id] = val;
+            }
+        }
+
+        function handleFormulaEnter(e) {
+            if (e.key === 'Enter' && activeCellId) {
+                const formulaBar = document.getElementById('formula-bar-input');
+                const val = formulaBar.value.trim();
+                const cellEl = document.getElementById('cell-' + activeCellId);
+
+                if (val.startsWith('=')) {
+                    sheetFormulas[activeCellId] = val;
+                    sheetCells[activeCellId] = '';
+                } else {
+                    delete sheetFormulas[activeCellId];
+                    sheetCells[activeCellId] = val;
+                }
+                
+                cellEl.blur();
+                populateGridUI();
+            }
+        }
+
+        function getCalculatedValue(id) {
+            if (sheetFormulas[id]) {
+                return evaluateFormula(sheetFormulas[id]);
+            }
+            return sheetCells[id] || '';
+        }
+
+        function evaluateFormula(formula) {
+            let expr = formula.slice(1).toUpperCase();
+            const cellRefRegex = /[A-D][1-6]/g;
+            let matches = expr.match(cellRefRegex);
+            
+            if (matches) {
+                // To avoid recursive calls, fetch direct raw evaluated value of each coordinate match
+                for (let ref of matches) {
+                    const refVal = getCalculatedValue(ref);
+                    const numVal = isNaN(Number(refVal)) ? 0 : Number(refVal);
+                    expr = expr.replace(new RegExp(ref, 'g'), numVal);
+                }
+            }
+
+            try {
+                // Ensure mathematical safety checks are strictly met before performing math evaluation
+                const safeExpr = expr.replace(/[^0-9+\-*/().\s]/g, '');
+                return Function('"use strict"; return (' + safeExpr + ')')() || 0;
+            } catch(e) {
+                return "Error";
+            }
+        }
+
+        function saveSheetsToDatabase() {
+            if (!activeSheetFileId) {
+                alert("Initialize or launch an existing template from Database central directory first.");
+                return;
+            }
+            const file = database.find(f => f.id === activeSheetFileId);
+            if (file) {
+                const saveObj = {
+                    data: sheetCells,
+                    formulas: sheetFormulas
+                };
+                file.content = JSON.stringify(saveObj);
+                file.date = new Date().toISOString().split('T')[0];
+                syncDatabaseToStorage();
+                alert("Spreadsheet grid updated successfully inside Directory.");
+            }
+        }
+
+        function exportToCSV() {
+            let csvContent = "";
+            for (let row=1; row<=6; row++) {
+                let rowArray = [];
+                ['A','B','C','D'].forEach(col => {
+                    rowArray.push(getCalculatedValue(col + row));
+                });
+                csvContent += rowArray.join(",") + "\n";
+            }
+            const blob = new Blob([csvContent], {type: "text/csv;charset=utf-8"});
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "accounting_matrix.csv";
+            link.click();
+        }
+
+
+        // --- DOCS WRITING SERVICE ---
+        function saveDocsToDatabase() {
+            if (!activeTextFileId) {
+                alert("Initialize or launch an existing file from Database Central Directory first.");
+                return;
+            }
+            const file = database.find(f => f.id === activeTextFileId);
+            if (file) {
+                file.content = document.getElementById('notepad-input').value;
+                file.date = new Date().toISOString().split('T')[0];
+                syncDatabaseToStorage();
+                alert("Text buffer synchronized inside Directory successfully.");
+            }
+        }
+
+        function saveTextFile() {
+            const text = document.getElementById('notepad-input').value;
+            const blob = new Blob([text], {type: "text/plain;charset=utf-8"});
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "docs_export.txt";
+            link.click();
+        }
+
+
+        // --- WINDOW MANAGEMENT LAYER ---
         let currentZIndex = 100;
 
         function openWindow(id) {
             const win = document.getElementById(id);
             win.style.display = 'flex';
+            win.classList.remove('minimized');
             focusWindow(win);
-            if(id === 'win-terminal') {
-                setTimeout(() => document.getElementById('term-field').focus(), 50);
-            }
+            playBeepSound(650, 0.05);
+            updateTaskbar();
+            saveWindowState(id);
         }
 
         function closeWindow(id) {
-            document.getElementById(id).style.display = 'none';
+            const win = document.getElementById(id);
+            win.style.display = 'none';
+            win.classList.remove('minimized');
+            playBeepSound(450, 0.05);
+            updateTaskbar();
+            saveWindowState(id);
         }
 
-        function focusWindow(element) {
+        function minimizeWindow(id) {
+            const win = document.getElementById(id);
+            win.style.display = 'none';
+            win.classList.add('minimized');
+            playBeepSound(300, 0.05);
+            updateTaskbar();
+            saveWindowState(id);
+        }
+
+        function restoreWindow(id) {
+            const win = document.getElementById(id);
+            win.style.display = 'flex';
+            win.classList.remove('minimized');
+            focusWindow(win);
+            playBeepSound(600, 0.05);
+            updateTaskbar();
+            saveWindowState(id);
+        }
+
+        function toggleMaximize(id) {
+            const win = document.getElementById(id);
+            win.classList.toggle('maximized');
+            playBeepSound(700, 0.06);
+            saveWindowState(id);
+        }
+
+        function focusWindow(win) {
             currentZIndex++;
-            element.style.zIndex = currentZIndex;
+            win.style.zIndex = currentZIndex;
+            
+            document.querySelectorAll('.window').forEach(w => {
+                const header = w.querySelector('.window-header');
+                if (header) {
+                    if (w === win) {
+                        header.classList.remove('inactive');
+                    } else {
+                        header.classList.add('inactive');
+                    }
+                }
+            });
+            updateTaskbar();
         }
 
+        // Draggable script coordinates with clamping engine
         document.querySelectorAll('.window').forEach(win => {
+            if (win.id === 'start-menu') return;
             const header = win.querySelector('.window-header');
             win.addEventListener('mousedown', () => focusWindow(win));
 
             header.onmousedown = function(e) {
-                if (e.target.classList.contains('window-close-btn')) return;
+                if (e.target.classList.contains('window-control-btn')) return;
+                if (win.classList.contains('maximized')) return;
 
                 let lastX = e.clientX;
                 let lastY = e.clientY;
@@ -575,182 +1539,572 @@ Type "help" to display available internal operations.
                     lastX = e.clientX;
                     lastY = e.clientY;
 
-                    win.style.top = (win.offsetTop - deltaY) + "px";
-                    win.style.left = (win.offsetLeft - deltaX) + "px";
+                    let newTop = win.offsetTop - deltaY;
+                    let newLeft = win.offsetLeft - deltaX;
+
+                    const maxTop = window.innerHeight - 80;
+                    const maxLeft = window.innerWidth - 60;
+
+                    if (newTop < 0) newTop = 0;
+                    if (newTop > maxTop) newTop = maxTop;
+                    if (newLeft < -win.offsetWidth + 100) newLeft = -win.offsetWidth + 100;
+                    if (newLeft > maxLeft) newLeft = maxLeft;
+
+                    win.style.top = newTop + "px";
+                    win.style.left = newLeft + "px";
                 };
 
                 document.onmouseup = function() {
                     document.onmousemove = null;
                     document.onmouseup = null;
+                    saveWindowState(win.id);
                 };
             };
         });
 
-        // --- TERMINAL ENGINE ---
-        function handleTerminal(e) {
-            if (e.key === 'Enter') {
-                const inputField = document.getElementById('term-field');
-                const rawCmd = inputField.value.trim();
-                const cmd = rawCmd.toLowerCase();
-                const outBox = document.getElementById('term-out');
+        // Dynamic taskbar update helper
+        function updateTaskbar() {
+            const tabsContainer = document.getElementById('taskbar-tabs');
+            tabsContainer.innerHTML = '';
 
-                outBox.innerHTML += `\nC:\\ACCOUNTING&gt;${rawCmd}`;
+            document.querySelectorAll('.window').forEach(win => {
+                if (win.id === 'start-menu') return;
 
-                if (cmd === 'help') {
-                    outBox.innerHTML += `\nAvailable Commands:\n  dir          - List files in current directory\n  ledger       - Execute LEDGER.EXE\n  audit        - Execute AUDIT.EXE\n  calc         - Execute ROI_CALC.EXE\n  assets       - Execute ASSET_VAL.EXE\n  clear        - Clear console stream`;
-                } else if (cmd === 'dir') {
-                    outBox.innerHTML += `\n Volume in drive C has no label.\n Directory of C:\\ACCOUNTING\n\n2026-07-18  05:24p       <EXE>      LEDGER.EXE\n2026-07-18  05:24p       <EXE>      AUDIT.EXE\n2026-07-18  05:24p       <EXE>      ROI_CALC.EXE\n2026-07-18  05:24p       <EXE>      ASSET_VAL.EXE\n               4 File(s) operational.`;
-                } else if (cmd === 'ledger') {
-                    openWindow('win-ledger');
-                    outBox.innerHTML += `\nLaunching LEDGER.EXE...`;
-                } else if (cmd === 'audit') {
-                    openWindow('win-audit');
-                    outBox.innerHTML += `\nLaunching AUDIT.EXE...`;
-                } else if (cmd === 'calc') {
-                    openWindow('win-calc');
-                    outBox.innerHTML += `\nLaunching ROI_CALC.EXE...`;
-                } else if (cmd === 'assets') {
-                    openWindow('win-assets');
-                    outBox.innerHTML += `\nLaunching ASSET_VALUATION.EXE...`;
-                } else if (cmd === 'clear') {
-                    outBox.innerHTML = '';
-                } else if (cmd !== '') {
-                    outBox.innerHTML += `\n'${rawCmd}' is not recognized as an internal accounting executable or batch script/file in accountant os, for more help contact dev(spoiler i wont be helping cuz this is a user issue lock in twin).`;
+                const isVisible = win.style.display === 'flex' || win.style.display === 'block';
+                const isMinimized = win.classList.contains('minimized');
+
+                if (isVisible || isMinimized) {
+                    const headerText = win.querySelector('.window-header span').innerText;
+                    const tab = document.createElement('button');
+                    tab.className = 'retro-btn taskbar-tab';
+                    if (parseInt(win.style.zIndex) === currentZIndex && isVisible) {
+                        tab.classList.add('active');
+                    }
+                    tab.innerText = headerText;
+                    tab.onclick = () => {
+                        if (isMinimized) {
+                            restoreWindow(win.id);
+                        } else if (parseInt(win.style.zIndex) === currentZIndex) {
+                            minimizeWindow(win.id);
+                        } else {
+                            focusWindow(win);
+                        }
+                    };
+                    tabsContainer.appendChild(tab);
                 }
-
-                inputField.value = '';
-                outBox.scrollTop = outBox.scrollHeight;
-            }
+            });
         }
 
-        // --- ROI CALCULATOR TAB & FORM LOGIC ---
-        function switchCalcTab(tabType) {
-            document.getElementById('tab-btn-standard').classList.remove('active');
-            document.getElementById('tab-btn-form').classList.remove('active');
-            document.getElementById('calc-view-standard').style.display = 'none';
-            document.getElementById('calc-view-form').style.display = 'none';
-
-            if(tabType === 'standard') {
-                document.getElementById('tab-btn-standard').classList.add('active');
-                document.getElementById('calc-view-standard').style.display = 'block';
+        function toggleStartMenu() {
+            const start = document.getElementById('start-menu');
+            if (start.style.display === 'flex') {
+                start.style.display = 'none';
             } else {
-                document.getElementById('tab-btn-form').classList.add('active');
-                document.getElementById('calc-view-form').style.display = 'block';
-                runRoiForm();
+                start.style.display = 'flex';
+                focusWindow(start);
             }
         }
 
-        function runRoiForm() {
-            const p = Number(document.getElementById('roi-principal').value || 0);
-            const r = Number(document.getElementById('roi-rate').value || 0) / 100;
-            const t = Number(document.getElementById('roi-term').value || 0);
-
-            // Simple Interest calculation
-            const simple = p * (1 + (r * t));
-            // Compound Interest calculation
-            const compound = p * Math.pow((1 + r), t);
-
-            document.getElementById('roi-out-simple').innerText = "$" + Math.floor(simple).toLocaleString();
-            document.getElementById('roi-out-compound').innerText = "$" + Math.floor(compound).toLocaleString();
+        function closeStartMenu() {
+            document.getElementById('start-menu').style.display = 'none';
         }
 
-        // --- NOTEPAD ---
-        function saveTextFile() {
-            const text = document.getElementById('notepad-input').value;
-            const blob = new Blob([text], {type: "text/plain;charset=utf-8"});
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "general_journal.txt";
-            link.click();
+        function saveWindowState(id) {
+            const win = document.getElementById(id);
+            const data = {
+                left: parseInt(win.style.left) || 50,
+                top: parseInt(win.style.top) || 50,
+                width: parseInt(win.style.width) || win.offsetWidth,
+                height: parseInt(win.style.height) || win.offsetHeight,
+                open: win.style.display === 'flex',
+                maximized: win.classList.contains('maximized'),
+                minimized: win.classList.contains('minimized')
+            };
+            localStorage.setItem(`state-${id}`, JSON.stringify(data));
         }
 
-        // --- AUDIT MATRIX ---
-        function calculateSheet() {
-            const rev = Number(document.getElementById('val-rev').value || 0);
-            const cogs = Number(document.getElementById('val-cogs').value || 0);
-            const deduct = Number(document.getElementById('val-deduct').value || 0);
+        function loadWindowStates() {
+            document.querySelectorAll('.window').forEach(win => {
+                if (win.id === 'start-menu') return;
+                const saved = localStorage.getItem(`state-${win.id}`);
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    win.style.left = data.left + "px";
+                    win.style.top = data.top + "px";
+                    if (data.width) win.style.width = data.width + "px";
+                    if (data.height) win.style.height = data.height + "px";
+                    
+                    if (data.open && !data.minimized) {
+                        win.style.display = 'flex';
+                    } else if (data.minimized) {
+                        win.style.display = 'none';
+                        win.classList.add('minimized');
+                    } else {
+                        win.style.display = 'none';
+                    }
 
-            const grossMargin = rev - cogs;
-            const calculatedTax = Math.max(0, Math.floor(grossMargin * 0.21));
-            const netIncome = grossMargin - deduct - calculatedTax;
-
-            document.getElementById('sum-gross').innerText = "$" + grossMargin.toLocaleString();
-            document.getElementById('sum-tax').innerText = "$" + calculatedTax.toLocaleString();
-            document.getElementById('sum-net').innerText = "$" + netIncome.toLocaleString();
+                    if (data.maximized) win.classList.add('maximized');
+                } else {
+                    const def = defaultWindowPositions[win.id];
+                    win.style.left = def.left + "px";
+                    win.style.top = def.top + "px";
+                    win.style.width = def.width + "px";
+                    win.style.height = def.height + "px";
+                    win.style.display = def.open ? 'flex' : 'none';
+                }
+            });
+            updateTaskbar();
         }
 
-        // --- CALC COMPONENT ---
+        function tickClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            document.getElementById('taskbar-clock').innerText = `${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+        }
+
+
+        // --- CALCULATOR MODULE ---
         const calcDisplay = document.getElementById('calc-display');
         function pressCalc(val) {
+            playBeepSound(1000, 0.03);
             if (calcDisplay.value === '0' || calcDisplay.value === 'Error') {
                 calcDisplay.value = val;
             } else {
                 calcDisplay.value += val;
             }
         }
-        function clearCalc() { calcDisplay.value = '0'; }
+        function clearCalc() {
+            playBeepSound(400, 0.08);
+            calcDisplay.value = '0';
+        }
         function calculateResult() {
             try {
+                playBeepSound(1200, 0.04);
                 calcDisplay.value = Function('"use strict";return (' + calcDisplay.value + ')')();
             } catch (err) {
                 calcDisplay.value = 'Error';
             }
         }
 
-        // --- ASSET GAME ENGINE ---
+
+        // --- ASSET GAME SIMULATION ---
         let cash = 5000;
         const assets = {
-            mach: { price: 650, owned: 0 },
-            tbill: { price: 270, owned: 0 }
+            mach: { price: 800, owned: 0 },
+            tbill: { price: 250, owned: 0 }
         };
 
+        const machHistory = [800, 800, 800, 800, 800, 800, 800, 800, 800, 800];
+        const tbillHistory = [250, 250, 250, 250, 250, 250, 250, 250, 250, 250];
+
         const ledgerHeadlines = [
-            "MACH Portfolio adjusted for depreciation variables.",
-            "Federal Reserve shifts base for overnight yield rates.",
-            "Treasury bonds clearing desk adjustments finalized by team.",
-            "Equipment valuations modified based on factory production limits."
+            "MACH machinery asset depreciated dynamically based on manufacturing output.",
+            "Federal Reserve adjusts overnight prime landing yield margins.",
+            "Secondary desk clearing processes complete transactions.",
+            "Production assets modified according to scheduled physical reviews."
         ];
+
+        function initAssetGame() {
+            const savedCash = localStorage.getItem('game-cash');
+            const savedMach = localStorage.getItem('game-mach');
+            const savedTbill = localStorage.getItem('game-tbill');
+
+            if (savedCash !== null) cash = parseFloat(savedCash);
+            if (savedMach !== null) assets.mach.owned = parseInt(savedMach);
+            if (savedTbill !== null) assets.tbill.owned = parseInt(savedTbill);
+
+            updateStockUI();
+            drawSparkline();
+
+            setInterval(() => {
+                assets.mach.price = Math.max(100, Math.floor(assets.mach.price + (Math.random() * 40 - 23)));
+                assets.tbill.price = Math.max(50, Math.floor(assets.tbill.price + (Math.random() * 20 - 9)));
+
+                document.getElementById('price-mach').innerText = assets.mach.price;
+                document.getElementById('price-tbill').innerText = assets.tbill.price;
+
+                machHistory.push(assets.mach.price);
+                if (machHistory.length > 20) machHistory.shift();
+                tbillHistory.push(assets.tbill.price);
+                if (tbillHistory.length > 20) tbillHistory.shift();
+                drawSparkline();
+
+                if (Math.random() > 0.6) {
+                    const log = document.getElementById('ticker-log');
+                    const line = ledgerHeadlines[Math.floor(Math.random() * ledgerHeadlines.length)];
+                    log.innerHTML += `<br>[ALERT] ${line}`;
+                    log.scrollTop = log.scrollHeight;
+                }
+                updateStockUI();
+            }, 4000);
+        }
 
         function buyAsset(id) {
             if (cash >= assets[id].price) {
                 cash -= assets[id].price;
                 assets[id].owned++;
+                playBeepSound(800, 0.08);
                 updateStockUI();
+                saveGameData();
+            } else {
+                playBeepSound(150, 0.25, 'triangle');
             }
         }
 
         function sellAsset(id) {
             if (assets[id].owned > 0) {
                 cash += assets[id].price;
-                assets[id].owneg--;
+                assets[id].owned--;
+                playBeepSound(600, 0.08);
                 updateStockUI();
+                saveGameData();
+            } else {
+                playBeepSound(150, 0.25, 'triangle');
             }
         }
 
         function updateStockUI() {
-            document.getElementById('player-cash').innerText = `LIQUID CAPITAL: $${Math.floor(cash)}`;
+            document.getElementById('player-cash').innerText = `LIQUID: $${Math.floor(cash)}`;
             document.getElementById('owned-mach').innerText = assets.mach.owned;
             document.getElementById('owned-tbill').innerText = assets.tbill.owned;
 
             const netWorth = cash + (assets.mach.owned * assets.mach.price) + (assets.tbill.owned * assets.tbill.price);
-            document.getElementById('player-networth').innerText = `TOTAL EQUITY: $${Math.floor(netWorth)}`;
+            document.getElementById('player-networth').innerText = `NET: $${Math.floor(netWorth)}`;
         }
 
-        setInterval(() => {
-            assets.mach.price = Math.max(100, Math.floor(assets.mach.price + (Math.random() * 40 - 25)));
-            assets.tbill.price = Math.max(50, Math.floor(assets.tbill.price + (Math.random() * 20 - 10)));
+        function saveGameData() {
+            localStorage.setItem('game-cash', cash);
+            localStorage.setItem('game-mach', assets.mach.owned);
+            localStorage.setItem('game-tbill', assets.tbill.owned);
+        }
 
-            document.getElementById('price-mach').innerText = assets.mach.price;
-            document.getElementById('price-tbill').innerText = assets.tbill.price;
+        function drawSparkline() {
+            const canvas = document.getElementById('asset-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
 
-            if (Math.random() > 0.5) {
-                const log = document.getElementById('ticker-log');
-                const line = ledgerHeadlines[Math.floor(Math.random() * ledgerHeadlines.length)];
-                log.innerHTML += `<br>[AMORT] ${line}`;
-                log.scrollTop = log.scrollHeight;
+            function plot(history, color, minBound, maxBound) {
+                if (history.length < 2) return;
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                const stepX = w / (history.length - 1);
+                for (let i = 0; i < history.length; i++) {
+                    const normalized = (history[i] - minBound) / (maxBound - minBound);
+                    const y = h - 4 - (normalized * (h - 8));
+                    const x = i * stepX;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
             }
-            updateStockUI();
-        }, 4000);
+            plot(machHistory, '#00ff00', 100, 1500);
+            plot(tbillHistory, '#ffff00', 50, 500);
+        }
+
+
+        // --- COMMAND INTERPRETER TERMINAL ---
+        function focusTerminal() {
+            document.getElementById('terminal-input').focus();
+        }
+
+        function handleTerminalCommand(e) {
+            if (e.key === 'Enter') {
+                const inputEl = document.getElementById('terminal-input');
+                const rawCmd = inputEl.value;
+                const cmd = rawCmd.trim().toLowerCase();
+                const output = document.getElementById('terminal-output');
+
+                output.textContent += `\nC:\\ACCOUNTANT> ${rawCmd}`;
+                
+                if (cmd === 'help') {
+                    output.textContent += `\nAvailable commands:
+  help       - Display diagnostic listings.
+  about      - Display kernel release specifications.
+  clear      - Empty console screen workspace.
+  market     - Pull asset evaluation variables.
+  cheat      - Allocate micro grant to liquid cash values.`;
+                } else if (cmd === 'about') {
+                    output.textContent += `\nAccountant OS Terminal Workspace Framework v5.0
+Engine base verified for compliant financial tracking operations.`;
+                } else if (cmd === 'clear') {
+                    output.textContent = 'Accountant OS Terminal [Version 5.0.1]\n';
+                } else if (cmd === 'market') {
+                    output.textContent += `\nMARKET ASSETS:
+  MACH (Machinery): $${assets.mach.price} (Owned: ${assets.mach.owned})
+  TBILL (T-Bills) : $${assets.tbill.price} (Owned: ${assets.tbill.owned})`;
+                } else if (cmd === 'cheat') {
+                    cash += 50000;
+                    updateStockUI();
+                    saveGameData();
+                    playSynth('sweep');
+                    output.textContent += `\n[GRANT] System Developer financial grant injected (+ $50,000 Liquid capital).`;
+                } else if (cmd !== '') {
+                    output.textContent += `\n'${rawCmd}' is not recognized as a system operational console parameter.`;
+                }
+
+                inputEl.value = '';
+                output.scrollTop = output.scrollHeight;
+                playBeepSound(900, 0.04);
+            }
+        }
+
+
+        // --- PERSONALIZATION / THEME CONFIG ---
+        const themeSet = {
+            ledger: {
+                '--bg-color': '#f4efe6',
+                '--body-bg-extra': 'radial-gradient(circle, #fbf9f5 0%, #eae1d1 100%)',
+                '--win-header-bg': 'linear-gradient(90deg, #1e2d2f, #3b5056)',
+                '--win-header-color': '#f4efe6',
+                '--win-bg': '#e2dacb',
+                '--win-border-light': '#ffffff',
+                '--win-border-dark': '#8c8273',
+                '--accent-glow': 'rgba(0, 0, 0, 0.15)',
+                '--ledger-grid-color': '#c9bfb0',
+                '--text-color': '#1e1d1a'
+            },
+            classic: {
+                '--bg-color': '#008080',
+                '--body-bg-extra': 'none',
+                '--win-header-bg': 'linear-gradient(90deg, #000080, #1084d0)',
+                '--win-header-color': '#ffffff',
+                '--win-bg': '#c0c0c0',
+                '--win-border-light': '#ffffff',
+                '--win-border-dark': '#808080',
+                '--accent-glow': 'rgba(0, 0, 0, 0.4)',
+                '--ledger-grid-color': '#808080',
+                '--text-color': '#000000'
+            },
+            midnight: {
+                '--bg-color': '#0a0815',
+                '--body-bg-extra': 'radial-gradient(circle, #1a163a 0%, #05030a 100%)',
+                '--win-header-bg': 'linear-gradient(90deg, #4f118c, #8c25db)',
+                '--win-header-color': '#00ffea',
+                '--win-bg': '#1b172a',
+                '--win-border-light': '#4f118c',
+                '--win-border-dark': '#0a0815',
+                '--accent-glow': 'rgba(140, 37, 219, 0.25)',
+                '--ledger-grid-color': '#4f118c',
+                '--text-color': '#00ffea'
+            },
+            toxic: {
+                '--bg-color': '#030503',
+                '--body-bg-extra': 'none',
+                '--win-header-bg': '#00aa00',
+                '--win-header-color': '#000000',
+                '--win-bg': '#0a100a',
+                '--win-border-light': '#00ff00',
+                '--win-border-dark': '#004400',
+                '--accent-glow': 'rgba(0, 255, 0, 0.15)',
+                '--ledger-grid-color': '#005500',
+                '--text-color': '#00ff00'
+            }
+        };
+
+        function initThemeAndBranding() {
+            const savedTheme = localStorage.getItem('sys-theme') || 'ledger';
+            applyTheme(savedTheme);
+
+            const savedBrand = localStorage.getItem('sys-branding') || 'Accountant OS';
+            document.getElementById('sys-branding-input').value = savedBrand;
+            changeBranding(savedBrand);
+        }
+
+        function applyTheme(name) {
+            const properties = themeSet[name] || themeSet.ledger;
+            const root = document.documentElement;
+            Object.keys(properties).forEach(key => {
+                root.style.setProperty(key, properties[key]);
+            });
+
+            const scanlines = document.getElementById('scanlines');
+            if (name === 'toxic') {
+                scanlines.style.display = 'block';
+            } else {
+                scanlines.style.display = 'none';
+            }
+
+            localStorage.setItem('sys-theme', name);
+            playBeepSound(800, 0.05);
+        }
+
+        function changeBranding(val) {
+            const cleanVal = val || 'Accountant OS';
+            document.getElementById('taskbar-branding').innerText = cleanVal;
+            document.querySelectorAll('.start-sidebar-text').forEach(el => el.innerText = cleanVal);
+            localStorage.setItem('sys-branding', cleanVal);
+        }
+
+        function resetSystemData() {
+            if (confirm("Permanently wipe core systems partition database?")) {
+                localStorage.clear();
+                alert("Formatting secure directory... Complete.");
+                sessionStorage.removeItem('system-booted');
+                window.location.reload();
+            }
+        }
+
+
+        // --- WEBAUDIO PROCEDURAL SOUND & KBD CLICKS ---
+        let audioCtx = null;
+        let playInterval = null;
+        let isLooping = false;
+        let visualizerActive = false;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playBeepSound(frequency = 440, duration = 0.1, type = 'sine') {
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(frequency, ctx.currentTime);
+                gain.gain.setValueAtTime(0.04, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            } catch (err) {}
+        }
+
+        // Tactile typewriter key down acoustic simulation
+        function playTypewriterKeyClick() {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(1500, now);
+                osc.frequency.exponentialRampToValueAtTime(250, now + 0.02);
+                
+                gain.gain.setValueAtTime(0.012, now);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(now + 0.03);
+            } catch (e) {}
+        }
+
+        function playSynth(mode) {
+            try {
+                const ctx = getAudioContext();
+                const now = ctx.currentTime;
+                
+                if (mode === 'chime') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(261.63, now); // C4
+                    osc.frequency.setValueAtTime(329.63, now + 0.12); // E4
+                    osc.frequency.setValueAtTime(392.00, now + 0.24); // G4
+                    osc.frequency.setValueAtTime(523.25, now + 0.36); // C5
+                    
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(now + 1.2);
+                } else if (mode === 'sweep') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(1000, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.6);
+                    
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(now + 0.6);
+                }
+            } catch (err) {}
+        }
+
+        function toggleJukeboxLoop() {
+            if (isLooping) {
+                stopAudioEngine();
+                return;
+            }
+            getAudioContext();
+            isLooping = true;
+            visualizerActive = true;
+            animateVisualizer();
+
+            let step = 0;
+            const frequencies = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
+            const melody = [0, 2, 4, 3, 5, 4, 7, 6, 5, 3, 4, 2, 0, 1, 2, 4];
+
+            playInterval = setInterval(() => {
+                try {
+                    const ctx = getAudioContext();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    
+                    osc.type = 'square';
+                    const note = melody[step % melody.length];
+                    osc.frequency.setValueAtTime(frequencies[note], ctx.currentTime);
+                    
+                    gain.gain.setValueAtTime(0.03, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+                    
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.2);
+                    step++;
+                } catch(e) {}
+            }, 180);
+        }
+
+        function stopAudioEngine() {
+            if (playInterval) {
+                clearInterval(playInterval);
+                playInterval = null;
+            }
+            isLooping = false;
+            visualizerActive = false;
+            const bars = document.querySelectorAll('.vis-bar');
+            bars.forEach(bar => bar.style.height = '10%');
+        }
+
+        function animateVisualizer() {
+            if (!visualizerActive) return;
+            const bars = document.querySelectorAll('.vis-bar');
+            bars.forEach(bar => {
+                const height = Math.floor(Math.random() * 85) + 15;
+                bar.style.height = `${height}%`;
+            });
+            setTimeout(() => {
+                requestAnimationFrame(animateVisualizer);
+            }, 80);
+        }
     </script>
 </body>
 </html>
