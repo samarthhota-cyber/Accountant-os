@@ -1,45 +1,30 @@
-Accountant.exe // Fiscal Ledger System
+# Accountant OS // Fiscal Computing System
 
-A self-contained corporate auditing environment simulating a legacy financial terminal. This platform equips the user with a collection of lightweight, reactive ledger utilities designed to handle bookkeeping notes, flat tax modeling, basic math operations, and live asset valuation simulations.
-Core Ledger Modules
+Accountant OS is an interactive, vintage-themed web operating system simulator built for the Hack Club Stardance WebOS Challenge. It mimics a retro accounting and bookkeeping workstation from the mid-to-late 1990s, integrating classic aesthetics with practical, interconnected utilities.
 
-    LEDGER.EXE (Corporate Journal)
+The system is constructed as a self-contained, single-file application (`index.html`) using pure HTML, CSS, and vanilla JavaScript without external library dependencies, ensuring fast load times and offline accessibility.
 
-    A specialized general journal scratchpad optimized for recording quick debit and credit adjustments or client audit logs. It includes a local export tool to save entries as flat text files directly to your machine.
+## Core Features
 
-    AUDIT.EXE (Tax Balancing Matrix)
+*   **Draggable & Resizable Window Manager**: Drag windows across the screen with strict viewport boundary clamping to prevent elements from going off-screen. Standard minimize (-), maximize (□), and close (X) controls are supported.
+*   **Central File Database (`DATABASE.EXE`)**: A relational file manager representing the primary directory. It displays stored documents and spreadsheets, keeping track of names, formats, file sizes, and dates. Double-clicking any listed document launches it directly in its respective application.
+*   **Dynamic Spreadsheet (`SHEETS.EXE`)**: An Excel-style 4x6 interactive ledger grid (A1 to D6) featuring an active Formula Bar. The application parses mathematical cell-reference equations (e.g., `=A1+B1` or `=C3*1.21`) in real-time.
+*   **Multi-Document Text Editor (`DOCS.EXE`)**: A clean ledger pad designed for writing and editing files with options to export directly to the local disk as `.txt` files or commit changes back to the virtual system database.
+*   **Tactile Audio Engine**: A Web Audio API-driven sound engine generates mechanical typewriter keyclick feedback as you type inside text fields, textareas, or grid cells.
+*   **Financial Monitor (`ASSETS.EXE`)**: A real-time market tracker detailing machinery and T-bill valuations, accompanied by a vector sparkline trend graph drawn on an HTML `<canvas>`.
+*   **System Shell (`CMD.EXE`)**: A classic terminal and interpreter responsive to commands such as `help`, `about`, `clear`, `market`, and `cheat`.
+*   **Synthesis Jukebox (`SYNTH.EXE`)**: Generates custom square-wave chiptune melody loops, complete with an animated equalizer visualizer driven by procedural step timing.
+*   **Persistent Memory State**: Window coordinates, active dimension states, local databases, game statistics, themes, and customized taskbar branding strings are saved in the browser's `localStorage` to persist across system restarts.
 
-    An interactive financial modeling table that computes crucial margins on the fly. Input Gross Revenues, Cost of Goods Sold, and Standard Deductions to instantly analyze Gross Margins, Estimated Corporate Tax Liability at a flat 21 percent, and Net Operating Income.
+## Themes Supported
 
-    ROI_CALC.EXE (Financial Calculator)
+*   **Vintage Ledger**: A parchment-styled, cream-tinted bookkeeping design with dark charcoal text and muted accents.
+*   **Windows Classic**: The recognizable teal desktop layout with clean grey panels and blue title highlights.
+*   **Midnight Nebula**: A cosmic violet and deep space theme displaying vivid cyan indicators.
+*   **Green Phosphor (Toxic)**: A dark glass aesthetic overlaid with high-contrast glowing neon green lines and a subtle CRT scanline effect.
 
-    A traditional mathematical terminal for verifying transaction fractions, interest accruals, or simple baseline accounting balance sheets.
+## How to Run
 
-    ASSET_VAL.EXE (Asset Valuation Terminal)
-
-    A real-time equity tracker that monitors cash flow and capital portfolios. Users can acquire or liquidate contract blocks of Industrial Machinery or 10-Year Treasury Bills while an integrated ticker stream logs simulated depreciation adjustments and macroeconomic interest shifts.
-
-Getting Started
-
-The entire system is completely self-contained in a single web document with zero external dependencies, making it straightforward to run locally.
-Prerequisites
-
-    Any standard desktop web browser like Chrome, Firefox, Edge, or Safari.
-
-Launch Instructions
-
-1   Copy the source code provided in the project files.
-
-2    Paste it into a new text document on your computer.
-
-3    Save the file with an .html extension, such as AccountantOS.html.
-
-4    Double-click the saved file to launch the workspace immediately in your default browser.
-
-Technical Details & Architecture
-
-    Front-End Framework: Raw HTML5 semantic markup structured around a retro UI workspace grid.
-
-    Styling & Interaction: Clean, responsive CSS configurations featuring traditional depth emulation window borders and an operational layered window stacking manager for focus control.
-
-    Execution Engine: Pure JavaScript event handling optimized to bypass click conflicts inside input components, ensuring a smooth window-dragging experience while keeping fields fully editable.
+1. Clone or download the repository.
+2. Open `index.html` in any modern web browser.
+3. Interact with the BIOS boot screen and click `[ LOAD ACCOUNTANT_OS.EXE ]` to enter the desktop environment.
