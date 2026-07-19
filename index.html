@@ -112,6 +112,72 @@
             font-size: 12px;
         }
 
+        /* Terminal Window */
+        .terminal-body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: "Courier New", monospace;
+            width: 460px;
+            height: 280px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-output {
+            flex-grow: 1;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-bottom: 5px;
+            user-select: text;
+        }
+
+        .terminal-input-row {
+            display: flex;
+            align-items: center;
+        }
+
+        .terminal-prompt {
+            color: #00ff00;
+            margin-right: 5px;
+        }
+
+        .terminal-input {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            flex-grow: 1;
+            user-select: text;
+        }
+
+        /* Tab Layouts */
+        .tab-bar {
+            display: flex;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #808080;
+        }
+
+        .tab-btn {
+            background: #d0d0d0;
+            border: 2px solid;
+            border-color: #ffffff #808080 transparent #ffffff;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            margin-right: 2px;
+        }
+
+        .tab-btn.active {
+            background: #c0c0c0;
+            border-bottom: 2px solid #c0c0c0;
+            margin-bottom: -2px;
+            z-index: 11;
+        }
+
         /* Notepad */
         .notepad-textarea {
             width: 340px;
@@ -124,7 +190,7 @@
             padding: 5px;
             resize: none;
             outline: none;
-            user-select: text; /* Allow typing */
+            user-select: text;
         }
 
         /* Audit Grid */
@@ -153,7 +219,7 @@
             font-size: 12px;
             padding: 4px;
             text-align: right;
-            user-select: text; /* Allow text input selection */
+            user-select: text;
         }
 
         .sheet-sum-row {
@@ -163,7 +229,7 @@
             padding: 6px;
         }
 
-        /* Calc */
+        /* Calc & Forms */
         .calc-screen {
             width: 100%;
             height: 35px;
@@ -182,6 +248,25 @@
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 6px;
+        }
+
+        .form-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 10px;
+        }
+
+        .form-input {
+            width: 100px;
+            padding: 3px;
+            font-family: monospace;
+            border: 2px solid;
+            border-color: #808080 #ffffff #ffffff #808080;
+            outline: none;
+            text-align: right;
+            user-select: text;
         }
 
         /* Asset Monitor */
@@ -266,6 +351,23 @@
             <div class="icon-label">ASSET_VAL.EXE</div>
         </div>
 
+        <!-- TERMINAL WINDOW -->
+        <div id="win-terminal" class="window" style="left: 120px; top: 80px;">
+            <div class="window-header">
+                <span>TERMINAL.EXE - Command Prompt</span>
+                <button class="window-close-btn" onclick="closeWindow('win-terminal')">X</button>
+            </div>
+            <div class="window-body terminal-body" onclick="document.getElementById('term-field').focus()">
+                <div class="terminal-output" id="term-out">Accountant.exe OS Platform [Version 2026.4.18]
+Type "help" to display available internal operations.
+</div>
+                <div class="terminal-input-row">
+                    <span class="terminal-prompt">C:\ACCOUNTING&gt;</span>
+                    <input type="text" class="terminal-input" id="term-field" onkeydown="handleTerminal(event)" autocomplete="off">
+                </div>
+            </div>
+        </div>
+
         <!-- NOTEPAD -->
         <div id="win-ledger" class="window" style="left: 40px; top: 40px;">
             <div class="window-header">
@@ -324,31 +426,64 @@
             </div>
         </div>
 
-        <!-- CALCULATOR -->
+        <!-- CALCULATOR WITH NEW TAB FORM -->
         <div id="win-calc" class="window" style="left: 60px; top: 340px;">
             <div class="window-header">
                 <span>ROI_Calc.exe</span>
                 <button class="window-close-btn" onclick="closeWindow('win-calc')">X</button>
             </div>
-            <div class="window-body" style="width: 220px;">
-                <input type="text" class="calc-screen" id="calc-display" readonly value="0">
-                <div class="calc-grid">
-                    <button class="retro-btn" onclick="clearCalc()">C</button>
-                    <button class="retro-btn" onclick="pressCalc('/')">/</button>
-                    <button class="retro-btn" onclick="pressCalc('*')">*</button>
-                    <button class="retro-btn" onclick="pressCalc('-')">-</button>
-                    <button class="retro-btn" onclick="pressCalc('7')">7</button>
-                    <button class="retro-btn" onclick="pressCalc('8')">8</button>
-                    <button class="retro-btn" onclick="pressCalc('9')">9</button>
-                    <button class="retro-btn" onclick="pressCalc('+')">+</button>
-                    <button class="retro-btn" onclick="pressCalc('4')">4</button>
-                    <button class="retro-btn" onclick="pressCalc('5')">5</button>
-                    <button class="retro-btn" onclick="pressCalc('6')">6</button>
-                    <button class="retro-btn" onclick="calculateResult()">=</button>
-                    <button class="retro-btn" onclick="pressCalc('1')">1</button>
-                    <button class="retro-btn" onclick="pressCalc('2')">2</button>
-                    <button class="retro-btn" onclick="pressCalc('3')">3</button>
-                    <button class="retro-btn" onclick="pressCalc('0')">0</button>
+            <div class="window-body" style="width: 260px;">
+                <div class="tab-bar">
+                    <button class="tab-btn active" id="tab-btn-standard" onclick="switchCalcTab('standard')">Standard</button>
+                    <button class="tab-btn" id="tab-btn-form" onclick="switchCalcTab('form')">ROI Matrix Form</button>
+                </div>
+
+                <!-- Standard Calc View -->
+                <div id="calc-view-standard">
+                    <input type="text" class="calc-screen" id="calc-display" readonly value="0">
+                    <div class="calc-grid">
+                        <button class="retro-btn" onclick="clearCalc()">C</button>
+                        <button class="retro-btn" onclick="pressCalc('/')">/</button>
+                        <button class="retro-btn" onclick="pressCalc('*')">*</button>
+                        <button class="retro-btn" onclick="pressCalc('-')">-</button>
+                        <button class="retro-btn" onclick="pressCalc('7')">7</button>
+                        <button class="retro-btn" onclick="pressCalc('8')">8</button>
+                        <button class="retro-btn" onclick="pressCalc('9')">9</button>
+                        <button class="retro-btn" onclick="pressCalc('+')">+</button>
+                        <button class="retro-btn" onclick="pressCalc('4')">4</button>
+                        <button class="retro-btn" onclick="pressCalc('5')">5</button>
+                        <button class="retro-btn" onclick="pressCalc('6')">6</button>
+                        <button class="retro-btn" onclick="calculateResult()">=</button>
+                        <button class="retro-btn" onclick="pressCalc('1')">1</button>
+                        <button class="retro-btn" onclick="pressCalc('2')">2</button>
+                        <button class="retro-btn" onclick="pressCalc('3')">3</button>
+                        <button class="retro-btn" onclick="pressCalc('0')">0</button>
+                    </div>
+                </div>
+
+                <!-- Form Metric View -->
+                <div id="calc-view-form" style="display: none;">
+                    <div class="form-row">
+                        <label>Principal ($):</label>
+                        <input type="number" class="form-input" id="roi-principal" value="10000" oninput="runRoiForm()">
+                    </div>
+                    <div class="form-row">
+                        <label>Rate (%):</label>
+                        <input type="number" class="form-input" id="roi-rate" value="5" oninput="runRoiForm()">
+                    </div>
+                    <div class="form-row">
+                        <label>Terms (Yrs):</label>
+                        <input type="number" class="form-input" id="roi-term" value="3" oninput="runRoiForm()">
+                    </div>
+                    <hr style="margin: 8px 0; border: 1px inset #fff;">
+                    <div class="form-row" style="font-weight: bold; color: #008000;">
+                        <label>Simple Return:</label>
+                        <span id="roi-out-simple">$11,500</span>
+                    </div>
+                    <div class="form-row" style="font-weight: bold; color: #000080;">
+                        <label>Compound Cap:</label>
+                        <span id="roi-out-compound">$11,576</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -398,7 +533,7 @@
     </div>
 
     <div id="taskbar">
-        <button class="retro-btn" style="padding: 2px 12px;">⚙️ System Terminal</button>
+        <button class="retro-btn" style="padding: 2px 12px;" onclick="openWindow('win-terminal')">⚙️ System Terminal</button>
         <span style="font-weight: bold; font-size: 11px; padding-right: 10px;">Accountant.exe OS</span>
     </div>
 
@@ -410,6 +545,9 @@
             const win = document.getElementById(id);
             win.style.display = 'flex';
             focusWindow(win);
+            if(id === 'win-terminal') {
+                setTimeout(() => document.getElementById('term-field').focus(), 50);
+            }
         }
 
         function closeWindow(id) {
@@ -421,13 +559,11 @@
             element.style.zIndex = currentZIndex;
         }
 
-        // Fix: Drag engine bypasses interactive typing components
         document.querySelectorAll('.window').forEach(win => {
             const header = win.querySelector('.window-header');
             win.addEventListener('mousedown', () => focusWindow(win));
 
             header.onmousedown = function(e) {
-                // If clicking close button, do nothing
                 if (e.target.classList.contains('window-close-btn')) return;
 
                 let lastX = e.clientX;
@@ -449,6 +585,74 @@
                 };
             };
         });
+
+        // --- TERMINAL ENGINE ---
+        function handleTerminal(e) {
+            if (e.key === 'Enter') {
+                const inputField = document.getElementById('term-field');
+                const rawCmd = inputField.value.trim();
+                const cmd = rawCmd.toLowerCase();
+                const outBox = document.getElementById('term-out');
+
+                outBox.innerHTML += `\nC:\\ACCOUNTING&gt;${rawCmd}`;
+
+                if (cmd === 'help') {
+                    outBox.innerHTML += `\nAvailable Commands:\n  dir          - List files in current directory\n  ledger       - Execute LEDGER.EXE\n  audit        - Execute AUDIT.EXE\n  calc         - Execute ROI_CALC.EXE\n  assets       - Execute ASSET_VAL.EXE\n  clear        - Clear console stream`;
+                } else if (cmd === 'dir') {
+                    outBox.innerHTML += `\n Volume in drive C has no label.\n Directory of C:\\ACCOUNTING\n\n2026-07-18  05:24p       <EXE>      LEDGER.EXE\n2026-07-18  05:24p       <EXE>      AUDIT.EXE\n2026-07-18  05:24p       <EXE>      ROI_CALC.EXE\n2026-07-18  05:24p       <EXE>      ASSET_VAL.EXE\n               4 File(s) operational.`;
+                } else if (cmd === 'ledger') {
+                    openWindow('win-ledger');
+                    outBox.innerHTML += `\nLaunching LEDGER.EXE...`;
+                } else if (cmd === 'audit') {
+                    openWindow('win-audit');
+                    outBox.innerHTML += `\nLaunching AUDIT.EXE...`;
+                } else if (cmd === 'calc') {
+                    openWindow('win-calc');
+                    outBox.innerHTML += `\nLaunching ROI_CALC.EXE...`;
+                } else if (cmd === 'assets') {
+                    openWindow('win-assets');
+                    outBox.innerHTML += `\nLaunching ASSET_VALUATION.EXE...`;
+                } else if (cmd === 'clear') {
+                    outBox.innerHTML = '';
+                } else if (cmd !== '') {
+                    outBox.innerHTML += `\n'${rawCmd}' is not recognized as an internal accounting executable or batch script/file in accountant os, for more help contact dev(spoiler i wont be helping cuz this is a user issue lock in twin).`;
+                }
+
+                inputField.value = '';
+                outBox.scrollTop = outBox.scrollHeight;
+            }
+        }
+
+        // --- ROI CALCULATOR TAB & FORM LOGIC ---
+        function switchCalcTab(tabType) {
+            document.getElementById('tab-btn-standard').classList.remove('active');
+            document.getElementById('tab-btn-form').classList.remove('active');
+            document.getElementById('calc-view-standard').style.display = 'none';
+            document.getElementById('calc-view-form').style.display = 'none';
+
+            if(tabType === 'standard') {
+                document.getElementById('tab-btn-standard').classList.add('active');
+                document.getElementById('calc-view-standard').style.display = 'block';
+            } else {
+                document.getElementById('tab-btn-form').classList.add('active');
+                document.getElementById('calc-view-form').style.display = 'block';
+                runRoiForm();
+            }
+        }
+
+        function runRoiForm() {
+            const p = Number(document.getElementById('roi-principal').value || 0);
+            const r = Number(document.getElementById('roi-rate').value || 0) / 100;
+            const t = Number(document.getElementById('roi-term').value || 0);
+
+            // Simple Interest calculation
+            const simple = p * (1 + (r * t));
+            // Compound Interest calculation
+            const compound = p * Math.pow((1 + r), t);
+
+            document.getElementById('roi-out-simple').innerText = "$" + Math.floor(simple).toLocaleString();
+            document.getElementById('roi-out-compound').innerText = "$" + Math.floor(compound).toLocaleString();
+        }
 
         // --- NOTEPAD ---
         function saveTextFile() {
@@ -475,7 +679,7 @@
             document.getElementById('sum-net').innerText = "$" + netIncome.toLocaleString();
         }
 
-        // --- CALC ---
+        // --- CALC COMPONENT ---
         const calcDisplay = document.getElementById('calc-display');
         function pressCalc(val) {
             if (calcDisplay.value === '0' || calcDisplay.value === 'Error') {
@@ -496,15 +700,15 @@
         // --- ASSET GAME ENGINE ---
         let cash = 5000;
         const assets = {
-            mach: { price: 800, owned: 0 },
-            tbill: { price: 250, owned: 0 }
+            mach: { price: 650, owned: 0 },
+            tbill: { price: 270, owned: 0 }
         };
 
         const ledgerHeadlines = [
             "MACH Portfolio adjusted for depreciation variables.",
-            "Federal Reserve shifts base overnight yield rates.",
-            "Treasury bonds clearing desk adjustments finalized.",
-            "Equipment valuations modified based on factory limits."
+            "Federal Reserve shifts base for overnight yield rates.",
+            "Treasury bonds clearing desk adjustments finalized by team.",
+            "Equipment valuations modified based on factory production limits."
         ];
 
         function buyAsset(id) {
@@ -518,7 +722,7 @@
         function sellAsset(id) {
             if (assets[id].owned > 0) {
                 cash += assets[id].price;
-                assets[id].owned--;
+                assets[id].owneg--;
                 updateStockUI();
             }
         }
